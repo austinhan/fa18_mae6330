@@ -12,7 +12,7 @@ rm -f a.out *.mod *.o
 # Compile the source
 DBGFLAG="-ffree-line-length-none -g -fbacktrace -fcheck=all -pedantic -Wall -Wextra -W -Wno-unused-function -fopenmp"
 OPTFLAG="-ffree-line-length-none -O3 -ftree-vectorize -ffast-math -funroll-loops -fomit-frame-pointer -pipe"
-gfortran $OPTFLAG demoflow.f90 pressure.f90 visualize.f90 lptsub.f90
+gfortran $DBGFLAG demoflow.f90 pressure.f90 visualize.f90 lptsub.f90
 
 # To avoid any confusion, clean up the source before leaving
 rm -f *.mod *.o

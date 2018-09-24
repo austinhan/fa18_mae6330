@@ -31,6 +31,9 @@ module demoflow
   real(WP), parameter :: knu=0.01_WP
   ! Gravity
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
+  ! Include Lagrange Particle Tracking (1=yes)
+  integer, parameter :: lpttrack=1
+  
   ! ==========================================
   
   ! Mesh
@@ -51,7 +54,7 @@ module demoflow
   
   ! Time info
   real(WP) :: time,CFL,dt,dt_old
-  integer  :: ntime,pit
+  integer  :: ntime,pit,liter
   
   ! Discretization coefficients
   real(WP), dimension(1:nx,1:ny,1:2,-1:+1) :: plap   ! Pressure Laplacian
@@ -89,7 +92,7 @@ program main
   ntime=0
 
   ! Initialize particle tracking
-  call lpt_init
+  if (lpttrack.eq.1) call lpt_init
   
   ! Initialize visualization
   call visualize_init
@@ -114,8 +117,13 @@ program main
      call pressure_step
 
      ! Particle step (change stuff if two-way)
-     call lpt_solve
      
+     if (lpttrack.eq.1) then
+      do j=1,j
+        call lpt_solve
+      end do
+     end if
+
      ! Dump data for visualization
      call visualize_dump
   

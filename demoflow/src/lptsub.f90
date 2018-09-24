@@ -11,14 +11,17 @@ subroutine lpt_init
     use lptsub
     implicit none
     integer :: i
-    ! Create initial positions of particles TBD
+    ! Create initial positions/velocites of particles TBD
     do i=1,N
         xp(i)=0.5_WP
-        yp(i)=0.6_WP
+        yp(i)=0.3_WP
     end do
-    ! Initial velocities
+
     up=1.0_WP
     vp=0.0_WP
+
+    liter= int(dt/taup)
+    print *, liter
 end subroutine
 
 subroutine lpt_solve
@@ -33,13 +36,12 @@ subroutine lpt_solve
     do k=1,N
         ! ufp, vfp, fsn
         call lpt_fvel(xp(k),yp(k))
-        xphalf=xp(k)+dt/2.0_WP*up(k)
-        yphalf=yp(k)+dt/2.0_WP*vp(k)
-        
+        xphalf=xp(k)+taup/2.0_WP*up(k)
+        yphalf=yp(k)+taup/2.0_WP*vp(k)
         ! Periodic BC
         if (xphalf.ge.Lx) then
-            xp(k)=xp(k)+dt*up(k)-Lx
-            yp(k)=yp(k)+dt*vp(k)
+            xp(k)=xp(k)+taup*up(k)-Lx
+            yp(k)=yp(k)+taup*vp(k)
             ! call lpt_fvel(xp(k),yp(k))
             ! up(k)=ufp
             ! vp(k)=vfp
@@ -52,10 +54,10 @@ subroutine lpt_solve
         dup=fsn*(ufp-up(k))/taup+gravity(1)
         dvp=fsn*(vfp-vp(k))/taup+gravity(2)
         
-        uphalf=up(k)+dt/2.0_WP*dup
-        vphalf=vp(k)+dt/2.0_WP*dvp
-        xp(k)=xp(k)+dt*uphalf
-        yp(k)=yp(k)+dt*vphalf
+        uphalf=up(k)+taup/2.0_WP*dup
+        vphalf=vp(k)+taup/2.0_WP*dvp
+        xp(k)=xp(k)+taup*uphalf
+        yp(k)=yp(k)+taup*vphalf
         
         ! Periodic BC
         if (xp(k).ge.Lx) then
@@ -75,8 +77,8 @@ subroutine lpt_solve
         duphalf=fsn*(ufp-uphalf)/taup+gravity(1)
         dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)
 
-        up(k)=up(k)+dt*duphalf
-        vp(k)=vp(k)+dt*dvphalf
+        up(k)=up(k)+taup*duphalf
+        vp(k)=vp(k)+taup*dvphalf
         
         
     end do
