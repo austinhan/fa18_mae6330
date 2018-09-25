@@ -17,9 +17,8 @@ subroutine lpt_init
 
     up=1.0_WP
     vp=0.0_WP
-
     liter= int(dt/taup)
-    print *, liter
+
 end subroutine
 
 subroutine lpt_solve
@@ -29,6 +28,8 @@ subroutine lpt_solve
     ! real(WP) :: taup
     real(WP) :: fsn,Rep
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
+
+    liter= int(dt/taup)
 
     ! taup=dp**2.0_WP/knu/18.0_WP (if not defined in lptsub)
     do k=1,Np
@@ -78,7 +79,6 @@ subroutine lpt_solve
         up(k)=up(k)+taup*duphalf
         vp(k)=vp(k)+taup*dvphalf
         
-        print *, xp
     end do
 contains
     subroutine lpt_fvel(xpo,ypo)

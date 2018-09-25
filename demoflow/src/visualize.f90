@@ -8,6 +8,7 @@ module visualize
   
   ! Single-precision buffer for output
   real(SP), dimension(1:nx,1:ny) :: rarray
+  real(SP), dimension(Np) :: rarray2
   
 end module visualize
 
@@ -31,6 +32,7 @@ subroutine visualize_init
   call system('mkdir -p viz/V')
   call system('mkdir -p viz/P')
   call system('mkdir -p viz/div')
+  call system('mkdir -p viz/par')
   
   ! Output problem geometry
   filename='viz/geometry'
@@ -135,6 +137,19 @@ subroutine visualize_dump
      rarray=P(1:nx,1:ny)
      write(unit) rarray
      close(unit)
+
+    ! Create particle
+     filename='viz/par/par.'//trim(adjustl(buff))
+     open(newunit=unit,file=filename,form='unformatted',access='stream',iostat=ierr,status='replace')
+     cbuffer='par';     write(unit) cbuffer
+     cbuffer='part';  write(unit) cbuffer
+     ibuffer=1;       write(unit) ibuffer
+     cbuffer='block'; write(unit) cbuffer
+     rarray2(:)=xp
+     write(unit) rarray2
+     rarray2(:)=yp
+     write(unit) rarray2
+     close(unit)
      
      ! Create divergence data file
      filename='viz/div/div.'//trim(adjustl(buff))
@@ -157,6 +172,7 @@ subroutine visualize_dump
      cbuffer='VARIABLE';                                 write(unit,'(a80)') cbuffer
      cbuffer='vector per element: 1 V V/V.******';       write(unit,'(a80)') cbuffer
      cbuffer='scalar per element: 1 P P/P.******';       write(unit,'(a80)') cbuffer
+     cbuffer='vector per node: 1 par par/par.******'; write(unit,'(a80)') cbuffer
      cbuffer='scalar per element: 1 div div/div.******'; write(unit,'(a80)') cbuffer
      cbuffer='TIME';                                     write(unit,'(a80)') cbuffer
      cbuffer='time set: 1';                              write(unit,'(a80)') cbuffer

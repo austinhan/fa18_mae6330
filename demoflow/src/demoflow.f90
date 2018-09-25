@@ -123,11 +123,10 @@ program main
      ! Particle step (change stuff if two-way)
      
      if (lpttrack.eq.1) then
-      do j=1,j
+      do j=1,liter
         call lpt_solve
       end do
      end if
-
      ! Dump data for visualization
      call visualize_dump
   
