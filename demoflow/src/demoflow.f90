@@ -33,6 +33,7 @@ module demoflow
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
   integer, parameter :: lpttrack=1
+  integer, parameter :: Np=1
   
   ! ==========================================
   
@@ -62,6 +63,9 @@ module demoflow
   real(WP), dimension(1:nx,2:ny,1:2,-1:+1) :: vlap   ! V velocity Laplacian
   real(WP) :: ABcoeff                                ! Adams-Bashforth coefficient
   
+  ! LPT Stuff
+  real(WP), dimension(Np) :: xp,yp,up,vp  
+
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
   

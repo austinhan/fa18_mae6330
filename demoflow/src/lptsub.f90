@@ -1,10 +1,8 @@
 module lptsub
     use demoflow
     implicit none
-    integer, parameter :: N=1
-    real(WP), parameter :: dp=0.001_WP
+    real(WP), parameter :: dp=0.01_WP
     real(WP), parameter :: taup=dp**2.0_WP/knu/18.0_WP
-    real(WP), dimension(N) :: xp,yp,up,vp  
 end module lptsub
 
 subroutine lpt_init
@@ -12,8 +10,8 @@ subroutine lpt_init
     implicit none
     integer :: i
     ! Create initial positions/velocites of particles TBD
-    do i=1,N
-        xp(i)=0.5_WP
+    do i=1,Np
+        xp(i)=.5_WP
         yp(i)=0.3_WP
     end do
 
@@ -33,13 +31,13 @@ subroutine lpt_solve
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
 
     ! taup=dp**2.0_WP/knu/18.0_WP (if not defined in lptsub)
-    do k=1,N
+    do k=1,Np
         ! ufp, vfp, fsn
         call lpt_fvel(xp(k),yp(k))
         xphalf=xp(k)+taup/2.0_WP*up(k)
         yphalf=yp(k)+taup/2.0_WP*vp(k)
         ! Periodic BC
-        if (xphalf.ge.Lx) then
+        if (xphalf.ge.Lx-Lx/nx) then
             xp(k)=xp(k)+taup*up(k)-Lx
             yp(k)=yp(k)+taup*vp(k)
             ! call lpt_fvel(xp(k),yp(k))
@@ -60,7 +58,7 @@ subroutine lpt_solve
         yp(k)=yp(k)+taup*vphalf
         
         ! Periodic BC
-        if (xp(k).ge.Lx) then
+        if (xp(k).ge.Lx-Lx/nx) then
             xp(k)=xp(k)-Lx
             ! call lpt_fvel(xp(k),yp(k))
             ! up(k)=ufp
@@ -80,7 +78,7 @@ subroutine lpt_solve
         up(k)=up(k)+taup*duphalf
         vp(k)=vp(k)+taup*dvphalf
         
-        
+        print *, xp
     end do
 contains
     subroutine lpt_fvel(xpo,ypo)
