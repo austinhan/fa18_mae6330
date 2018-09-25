@@ -33,7 +33,7 @@ module demoflow
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
   integer, parameter :: lpttrack=1
-  integer, parameter :: Np=1
+  integer, parameter :: Np=3
   
   ! ==========================================
   
