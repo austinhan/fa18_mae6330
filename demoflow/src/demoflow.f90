@@ -96,8 +96,11 @@ program main
   ntime=0
 
   ! Initialize particle tracking
-  if (lpttrack.eq.1) call lpt_init
-  
+  if (lpttrack.eq.1) then
+     open(unit=88,file='part.txt',action="write")
+     call lpt_init
+  end if
+
   ! Initialize visualization
   call visualize_init
   
@@ -127,10 +130,13 @@ program main
         call lpt_solve
       end do
      end if
+     write(88,*) xp(1),yp(1),up(1),vp(1)
      ! Dump data for visualization
      call visualize_dump
   
   end do timeloop
+
+  if (lpttrack.eq.1) close(88)
   
   ! Get final time
   call cpu_time(walltime)
