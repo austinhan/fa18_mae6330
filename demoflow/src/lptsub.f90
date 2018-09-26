@@ -2,7 +2,7 @@ module lptsub
     use demoflow
     implicit none
     real(WP), parameter :: dp=0.1_WP
-    real(WP), parameter :: rhop=1.0_WP
+    real(WP), parameter :: rhop=30.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
 end module lptsub
 
@@ -50,8 +50,7 @@ subroutine lpt_solve
         end if
 
         ! Calculate dup/dt
-        dup=fsn*(ufp-up(k))/taup+1.0_WP!gravity(1)
-        print *, dup,up,fsn,Rep
+        dup=fsn*(ufp-up(k))/taup+60.0_WP!gravity(1)
         dvp=fsn*(vfp-vp(k))/taup+gravity(2)
 
         
@@ -75,7 +74,7 @@ subroutine lpt_solve
         ! new Rep -> fsn
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
-        duphalf=fsn*(ufp-uphalf)/taup+1.0_WP!gravity(1)
+        duphalf=fsn*(ufp-uphalf)/taup+60.0_WP!gravity(1)
         dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)
 
         up(k)=up(k)+dtp*duphalf

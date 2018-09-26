@@ -11,12 +11,12 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=1e-3_WP
+  real(WP), parameter :: maxdt=1e-2_WP
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.1_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
-  integer , parameter :: maxstep=10000
+  integer , parameter :: maxstep=5000
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
   real(WP), parameter :: abscvg=1.0e-4_WP
@@ -68,7 +68,7 @@ module demoflow
   real(WP) :: ABcoeff                                ! Adams-Bashforth coefficient
   
   ! LPT Stuff
-  real(WP), dimension(Np) :: xp,yp,up,vp  
+  real(WP), dimension(Np) :: xp,yp,up,vp
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
@@ -141,7 +141,7 @@ program main
   end do timeloop
 
   if (lpttrack.eq.1) close(88)
-  
+
   ! Get final time
   call cpu_time(walltime)
   print*,'Time taken: ',walltime-walltime_ref
