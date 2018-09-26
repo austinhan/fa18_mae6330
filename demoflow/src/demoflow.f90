@@ -13,7 +13,7 @@ module demoflow
   ! Time integration
   real(WP), parameter :: maxdt=1e-2_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=0.1_WP
+  real(WP), parameter :: viztime=0.01_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
   integer , parameter :: maxstep=5000

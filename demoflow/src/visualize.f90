@@ -8,7 +8,6 @@ module visualize
   
   ! Single-precision buffer for output
   real(SP), dimension(1:nx,1:ny) :: rarray
-  real(SP), dimension(Np) :: rarray2
   
 end module visualize
 
@@ -31,8 +30,9 @@ subroutine visualize_init
   call system('mkdir -p viz')
   call system('mkdir -p viz/V')
   call system('mkdir -p viz/P')
+  call system('mkdir -p viz/S')
   call system('mkdir -p viz/div')
-  call system('mkdir -p viz/par')
+  if (lpttrack.eq.1) call system('mkdir -p viz/particles')
   
   ! Output problem geometry
   filename='viz/geometry'
@@ -137,19 +137,6 @@ subroutine visualize_dump
      rarray=P(1:nx,1:ny)
      write(unit) rarray
      close(unit)
-
-    ! Create particle
-     filename='viz/par/par.'//trim(adjustl(buff))
-     open(newunit=unit,file=filename,form='unformatted',access='stream',iostat=ierr,status='replace')
-     cbuffer='par';     write(unit) cbuffer
-     cbuffer='part';  write(unit) cbuffer
-     ibuffer=1;       write(unit) ibuffer
-     cbuffer='block'; write(unit) cbuffer
-     rarray2(:)=xp
-     write(unit) rarray2
-     rarray2(:)=yp
-     write(unit) rarray2
-     close(unit)
      
      ! Create divergence data file
      filename='viz/div/div.'//trim(adjustl(buff))
@@ -169,11 +156,12 @@ subroutine visualize_dump
      cbuffer='type: ensight gold';                       write(unit,'(a80)') cbuffer
      cbuffer='GEOMETRY';                                 write(unit,'(a80)') cbuffer
      cbuffer='model: geometry';                          write(unit,'(a80)') cbuffer
+     if (lpttrack.eq.1) cbuffer='measured: 1 particles/particles.******'; write(unit,'(a80)') cbuffer
      cbuffer='VARIABLE';                                 write(unit,'(a80)') cbuffer
      cbuffer='vector per element: 1 V V/V.******';       write(unit,'(a80)') cbuffer
      cbuffer='scalar per element: 1 P P/P.******';       write(unit,'(a80)') cbuffer
-     cbuffer='vector per node: 1 par par/par.******'; write(unit,'(a80)') cbuffer
      cbuffer='scalar per element: 1 div div/div.******'; write(unit,'(a80)') cbuffer
+     if (lpttrack.eq.1) cbuffer='vector per measured node: 1 PartVel particles/velocity.******'; write(unit,'(a80)') cbuffer
      cbuffer='TIME';                                     write(unit,'(a80)') cbuffer
      cbuffer='time set: 1';                              write(unit,'(a80)') cbuffer
      cbuffer='number of steps:';                   write(unit,'(a16,x,i12)') cbuffer,int(nviz)+1
@@ -181,6 +169,50 @@ subroutine visualize_dump
      cbuffer='filename increment: 1';                    write(unit,'(a80)') cbuffer
      cbuffer='time values:';   write(unit,'(a12,x,10000000(3(ES12.5,x),/))') cbuffer,tviz(1:int(nviz)+1)
      close(unit)
+
+     ! Create particles datafiles
+     if (lpttrack.eq.1) then
+
+        ! Particle positions
+        filename='viz/particles/particles.'//trim(adjustl(buff))
+        open(newunit=unit,file=filename,form='unformatted',access='stream',iostat=ierr,status='replace')
+        cbuffer='C Binary';                          write(unit) cbuffer
+        cbuffer='Particle positions from demoflow';  write(unit) cbuffer
+        cbuffer='particle coordinates';              write(unit) cbuffer
+        ibuffer=max(np,1);                           write(unit) ibuffer
+        do i=1,np ! Does not conform to Ensight's specifications (Ensight is wrong here)
+           ibuffer=i;                                write(unit) ibuffer
+        end do
+        do i=1,np
+           rbuffer=xp(i);                            write(unit) rbuffer
+           rbuffer=yp(i);                            write(unit) rbuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer ! Need a z position
+        end do
+        if (np.eq.0) then ! Zero particle requires special handling (Ensight is wrong again)
+           ibuffer=1;                                write(unit) ibuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer ! Need a z position
+        end if
+        close(unit)
+
+        ! Particle velocity
+        filename='viz/particles/velocity.'//trim(adjustl(buff))
+        open(newunit=unit,file=filename,form='unformatted',access='stream',iostat=ierr,status='replace')
+        cbuffer='Particle velocity';                 write(unit) cbuffer
+        do i=1,np
+           rbuffer=up(i);                            write(unit) rbuffer
+           rbuffer=vp(i);                            write(unit) rbuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer ! Need a w velocity
+        end do
+        if (np.eq.0) then ! Zero particle requires special handling (Ensight is wrong again)
+           rbuffer=0.0_SP;                           write(unit) rbuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer
+           rbuffer=0.0_SP;                           write(unit) rbuffer ! Need a w velocity
+        end if
+        close(unit)
+        
+     end if
      
   end if
   
