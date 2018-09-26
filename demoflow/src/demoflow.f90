@@ -126,14 +126,14 @@ program main
      ! Particle step (change stuff if two-way)
      
      if (lpttrack.eq.1) then
+      write(88,*) xp(1),yp(1),up(1),vp(1)
       do j=1,liter
         call lpt_solve
       end do
      end if
-     write(88,*) xp(1),yp(1),up(1),vp(1)
      ! Dump data for visualization
      call visualize_dump
-  
+
   end do timeloop
 
   if (lpttrack.eq.1) close(88)
@@ -182,14 +182,14 @@ subroutine demoflow_setup
   mask(:,ny)=1
   
   ! Initial conditions
-  U=1.0_WP
+  U=0.0_WP
   V=0.0_WP
   P=0.0_WP
   
   ! Inflow condition
   do j=1,ny
      if (mask(1,j).eq.0) then
-        U(0:1,j)=1.0_WP
+        U(0:1,j)=0.0_WP
      end if
   end do
   
