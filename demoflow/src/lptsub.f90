@@ -84,7 +84,7 @@ contains
     subroutine lpt_fvel(xpo,ypo)
         implicit none
         integer :: i,j
-        real(WP) :: xpo,ypo,stppt,magud,dx2,dy2,xvp,yup
+        real(WP) :: xpo,ypo,stppt,magud,dx2,dy2,xvp,yup,xup,yvp
         stppt=-1
         dx2=(x(2)-x(1))/2
         dy2=(y(2)-y(1))/2
@@ -96,10 +96,12 @@ contains
         end do
 
         if ((xpo+dx2).lt.x(i)) then
-            xvp=x(i-1)-dx2
+            xvp=x(i-1)
         else
-            xvp=x(i)-dx2
+            xvp=x(i)
         endif
+
+        xup=x(i)-dx2
 
         stppt=-1
         j=1
@@ -109,25 +111,27 @@ contains
         end do
 
         if ((ypo+dy2).lt.y(j)) then
-            yup=y(j-1)-dy2
+            yup=y(j-1)
         else
-            yup=y(j)-dy2
+            yup=y(j)
         endif
+
+        yvp=y(j)-dy2
         
         
         ! interpolate velocities
         ! i=cell right of cell particle is indices
         ufp=1/(x(i)-x(i-1))/(2*dy2)*( &
-        &   u(i-1,j-1)*(x(i)-xpo)*(yup-ypo)+ &
-        &   u(i,j-1)*(-x(i-1)+xpo)*(yup-ypo)+ &
-        &   u(i-1,j)*(x(i)-xpo)*(-(yup-2*dy2)+ypo)+ &
-        &   u(i,j)*(-x(i-1)+xpo)*(-(yup-2*dy2)+ypo))
+        &   u(i-1,j-1)*(xup-xpo)*(yup-ypo)+ &
+        &   u(i,j-1)*(-(xup-2*dx2)+xpo)*(yup-ypo)+ &
+        &   u(i-1,j)*(xup-xpo)*(-(yup-2*dy2)+ypo)+ &
+        &   u(i,j)*(-(xup-2*dx2)+xpo)*(-(yup-2*dy2)+ypo))
         
         vfp=1/(2*dx2)/(y(j)-y(j-1))*( &
-        &   v(i-1,j-1)*(xvp-xpo)*(y(j)-ypo)+ &
-        &   v(i,j-1)*(-(xvp-2*dx2)+xpo)*(y(j)-ypo)+ &
-        &   v(i-1,j)*(xvp-xpo)*(-y(j-1)+ypo)+ &
-        &   v(i,j)*(-(xvp-2*dx2)+xpo)*(-y(j-1)+ypo))
+        &   v(i-1,j-1)*(xvp-xpo)*(yvp-ypo)+ &
+        &   v(i,j-1)*(-(xvp-2*dx2)+xpo)*(yvp-ypo)+ &
+        &   v(i-1,j)*(xvp-xpo)*(-(yvp-dy2*2)+ypo)+ &
+        &   v(i,j)*(-(xvp-2*dx2)+xpo)*(-(yvp-dy2*2)+ypo))
 
         magud=((ufp-up(k))**2+(vfp-vp(k))**2)**0.5
         Rep=dp*magud/knu
