@@ -2,7 +2,8 @@ module lptsub
     use demoflow
     implicit none
     real(WP), parameter :: dp=0.1_WP
-    real(WP), parameter :: taup=dp**2.0_WP/knu/18.0_WP
+    real(WP), parameter :: rhop=1.0_WP
+    real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
 end module lptsub
 
 subroutine lpt_init
@@ -17,7 +18,7 @@ subroutine lpt_init
 
     up=0.0_WP
     vp=0.0_WP
-    liter= int(dt/taup)
+    liter= 10
 
 end subroutine
 
@@ -25,22 +26,21 @@ subroutine lpt_solve
     use lptsub
     implicit none
     integer :: k
-    ! real(WP) :: taup
-    real(WP) :: fsn,Rep
+    real(WP) :: fsn,Rep,dtp
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
 
-    liter= int(dt/taup)
+    liter= 10 !int(dt/taup)
+    dtp=dt/liter
 
-    ! taup=dp**2.0_WP/knu/18.0_WP (if not defined in lptsub)
     do k=1,Np
         ! ufp, vfp, fsn
         call lpt_fvel(xp(k),yp(k))
-        xphalf=xp(k)+taup/2.0_WP*up(k)
-        yphalf=yp(k)+taup/2.0_WP*vp(k)
+        xphalf=xp(k)+dtp/2.0_WP*up(k)
+        yphalf=yp(k)+dtp/2.0_WP*vp(k)
         ! Periodic BC
         if (xphalf.ge.Lx-Lx/nx) then
-            xp(k)=xp(k)+taup*up(k)-Lx
-            yp(k)=yp(k)+taup*vp(k)
+            xp(k)=xp(k)+dtp*up(k)-Lx
+            yp(k)=yp(k)+dtp*vp(k)
             ! call lpt_fvel(xp(k),yp(k))
             ! up(k)=ufp
             ! vp(k)=vfp
@@ -50,13 +50,15 @@ subroutine lpt_solve
         end if
 
         ! Calculate dup/dt
-        dup=fsn*(ufp-up(k))/taup-100!gravity(1)
+        dup=fsn*(ufp-up(k))/taup+1.0_WP!gravity(1)
+        print *, dup,up,fsn,Rep
         dvp=fsn*(vfp-vp(k))/taup+gravity(2)
+
         
-        uphalf=up(k)+taup/2.0_WP*dup
-        vphalf=vp(k)+taup/2.0_WP*dvp
-        xp(k)=xp(k)+taup*uphalf
-        yp(k)=yp(k)+taup*vphalf
+        uphalf=up(k)+dtp/2.0_WP*dup
+        vphalf=vp(k)+dtp/2.0_WP*dvp
+        xp(k)=xp(k)+dtp*uphalf
+        yp(k)=yp(k)+dtp*vphalf
         
         ! Periodic BC
         if (xp(k).ge.Lx-Lx/nx) then
@@ -73,11 +75,11 @@ subroutine lpt_solve
         ! new Rep -> fsn
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
-        duphalf=fsn*(ufp-uphalf)/taup+1!gravity(1)
+        duphalf=fsn*(ufp-uphalf)/taup+1.0_WP!gravity(1)
         dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)
 
-        up(k)=up(k)+taup*duphalf
-        vp(k)=vp(k)+taup*dvphalf
+        up(k)=up(k)+dtp*duphalf
+        vp(k)=vp(k)+dtp*dvphalf
         
     end do
 contains
