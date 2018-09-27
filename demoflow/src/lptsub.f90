@@ -2,7 +2,7 @@ module lptsub
     use demoflow
     implicit none
     real(WP), parameter :: dp=0.1_WP
-    real(WP), parameter :: rhop=30.0_WP
+    real(WP), parameter :: rhop=3.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
 end module lptsub
 
@@ -12,11 +12,11 @@ subroutine lpt_init
     integer :: i
     ! Create initial positions/velocites of particles TBD
     do i=1,Np
-        xp(i)=.5_WP/i
-        yp(i)=0.3_WP/i
+        xp(i)=.01_WP
+        yp(i)=0.5_WP-i*0.1_WP
     end do
 
-    up=0.0_WP
+    up=0.5_WP
     vp=0.0_WP
     liter= 10
 
@@ -50,7 +50,7 @@ subroutine lpt_solve
         end if
 
         ! Calculate dup/dt
-        dup=fsn*(ufp-up(k))/taup+60.0_WP!gravity(1)
+        dup=fsn*(ufp-up(k))/taup+gravity(1)
         dvp=fsn*(vfp-vp(k))/taup+gravity(2)
 
         
@@ -74,7 +74,7 @@ subroutine lpt_solve
         ! new Rep -> fsn
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
-        duphalf=fsn*(ufp-uphalf)/taup+60.0_WP!gravity(1)
+        duphalf=fsn*(ufp-uphalf)/taup+gravity(1)
         dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)
 
         up(k)=up(k)+dtp*duphalf

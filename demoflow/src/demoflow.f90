@@ -16,7 +16,7 @@ module demoflow
   real(WP), parameter :: viztime=0.01_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
-  integer , parameter :: maxstep=5000
+  integer , parameter :: maxstep=20000
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
   real(WP), parameter :: abscvg=1.0e-4_WP
@@ -37,7 +37,7 @@ module demoflow
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
   integer, parameter :: lpttrack=1
-  integer, parameter :: Np=1
+  integer, parameter :: Np=5
   
   ! ==========================================
   
@@ -186,14 +186,14 @@ subroutine demoflow_setup
   mask(:,ny)=1
   
   ! Initial conditions
-  U=0.0_WP
+  U=1.0_WP
   V=0.0_WP
   P=0.0_WP
   
   ! Inflow condition
   do j=1,ny
      if (mask(1,j).eq.0) then
-        U(0:1,j)=0.0_WP
+        U(0:1,j)=1.0_WP
      end if
   end do
   
