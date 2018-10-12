@@ -4,6 +4,9 @@ module lptsub
     real(WP), parameter :: dp=0.1_WP
     real(WP), parameter :: rhop=30.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
+    integer :: k
+    real(WP) :: fsn,Rep,dtp
+    real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
 end module lptsub
 
 subroutine lpt_init
@@ -25,9 +28,7 @@ end subroutine
 subroutine lpt_solve
     use lptsub
     implicit none
-    integer :: k
-    real(WP) :: fsn,Rep,dtp
-    real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
+    
 
     liter= 10 !int(dt/taup)
     dtp=dt/liter
@@ -50,7 +51,7 @@ subroutine lpt_solve
         end if
 
         ! Calculate dup/dt
-        dup=fsn*(ufp-up(k))/taup+60.0_WP!gravity(1)
+        dup=fsn*(ufp-up(k))/taup+gravity(1)
         dvp=fsn*(vfp-vp(k))/taup+gravity(2)
 
         
@@ -74,13 +75,14 @@ subroutine lpt_solve
         ! new Rep -> fsn
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
-        duphalf=fsn*(ufp-uphalf)/taup+60.0_WP!gravity(1)
+        duphalf=fsn*(ufp-uphalf)/taup+gravity(1)
         dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)
 
         up(k)=up(k)+dtp*duphalf
         vp(k)=vp(k)+dtp*dvphalf
         
     end do
+    
 contains
     subroutine lpt_fvel(xpo,ypo)
         implicit none
@@ -141,3 +143,19 @@ contains
     end subroutine lpt_fvel
 end subroutine lpt_solve
 
+subroutine lpt_collisions
+    use lptsub
+    implicit none
+    ! Check if in a wall
+
+    ! Get distance inside wall
+
+    ! Calculate forces
+
+
+
+
+
+
+
+end subroutine lpt_collisions
