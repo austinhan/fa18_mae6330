@@ -5,10 +5,10 @@ module lptsub
     real(WP), parameter :: rhop=30.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
     real(WP), parameter :: e=0.8 ! Coefficient of restitution
-    integer :: k
+    integer :: k,ip,jp
     real(WP) :: fsn,Rep,dtp
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
-    real(WP) :: ksp,eta,lam ! Spring constant, damping coefficient
+    real(WP) :: ksp,eta,lam,dab,fcolx, fcoly ! Spring constant, damping coefficient, force range, distance into particle/wall, collision force (x,y)
 end module lptsub
 
 subroutine lpt_init
@@ -91,48 +91,48 @@ contains
         integer :: i,j
         real(WP) :: xpo,ypo,stppt,magud,dx2,dy2,xvp,yup,xup,yvp
         stppt=-1
-        dx2=(x(2)-x(1))/2
-        dy2=(y(2)-y(1))/2
+        dx2=(xm(2)-xm(1))/2
+        dy2=(ym(2)-ym(1))/2
         ! Get surrounding indices
         i=1
         do while (stppt.lt.0)
-        stppt=x(i)-xpo
+        stppt=xm(i)-xpo
         i=i+1
         end do
 
-        if ((xpo+dx2).lt.x(i)) then
-            xvp=x(i-1)
+        if ((xpo+dx2).lt.xm(i)) then
+            xvp=xm(i-1)
         else
-            xvp=x(i)
+            xvp=xm(i)
         endif
 
-        xup=x(i)-dx2
+        xup=xm(i)-dx2
 
         stppt=-1
         j=1
         do while (stppt.lt.0)
-        stppt=y(j)-ypo
+        stppt=ym(j)-ypo
         j=j+1
         end do
 
-        if ((ypo+dy2).lt.y(j)) then
-            yup=y(j-1)
+        if ((ypo+dy2).lt.ym(j)) then
+            yup=ym(j-1)
         else
-            yup=y(j)
+            yup=ym(j)
         endif
 
-        yvp=y(j)-dy2
+        yvp=ym(j)-dy2
         
         
         ! interpolate velocities
         ! i=cell right of cell particle is indices
-        ufp=1/(x(i)-x(i-1))/(2*dy2)*( &
+        ufp=1/(xm(i)-xm(i-1))/(2*dy2)*( &
         &   u(i-1,j-1)*(xup-xpo)*(yup-ypo)+ &
         &   u(i,j-1)*(-(xup-2*dx2)+xpo)*(yup-ypo)+ &
         &   u(i-1,j)*(xup-xpo)*(-(yup-2*dy2)+ypo)+ &
         &   u(i,j)*(-(xup-2*dx2)+xpo)*(-(yup-2*dy2)+ypo))
         
-        vfp=1/(2*dx2)/(y(j)-y(j-1))*( &
+        vfp=1/(2*dx2)/(ym(j)-ym(j-1))*( &
         &   v(i-1,j-1)*(xvp-xpo)*(yvp-ypo)+ &
         &   v(i,j-1)*(-(xvp-2*dx2)+xpo)*(yvp-ypo)+ &
         &   v(i-1,j)*(xvp-xpo)*(-(yvp-dy2*2)+ypo)+ &
@@ -141,6 +141,8 @@ contains
         magud=((ufp-up(k))**2+(vfp-vp(k))**2)**0.5
         Rep=dp*magud/knu
         fsn=1+0.15*Rep**0.687
+        ip=i
+        jp=j
         return
     end subroutine lpt_fvel
 end subroutine lpt_solve
@@ -148,16 +150,41 @@ end subroutine lpt_solve
 subroutine lpt_collisions
     use lptsub
     implicit none
-    ! Check if in a wall
+    fcolx=0
+    fcoly=0
 
-    ! Get distance inside wall
+    !x force at right wall
+    if (mask(ip+1,jp).eq.1) then
+        dab=abs(x(ip+1)-xp(k))
+        if (dab.lt.(dp/2+lam)) then
+            fcolx=-ksp*dab-eta*up(k)
+        end if
+    end if
 
-    ! Calculate forces
+    !x force at left wall
+    if (mask(ip,jp).eq.1) then
+        dab=abs(x(ip)-xp(k))
+        if (dab.lt.(dp/2+lam)) then
+            fcolx=ksp*dab-eta*up(k)
+        end if
 
+    end if
 
+    !y force at top wall
+    if (mask(ip,jp+1).eq.1) then
+        dab=abs(y(jp+1)-yp(k))
+        if (dab.lt.(dp/2+lam)) then
+            fcoly=-ksp*dab-eta*vp(k)
+        end if
+    end if
 
-
-
+    !y force at bottom wall
+    if (mask(ip,jp).eq.1) then
+        dab=abs(y(jp)-yp(k))
+        if (dab.lt.(dp/2+lam)) then
+            fcoly=ksp*dab-eta*vp(k)
+        end if
+    end if
 
 
 end subroutine lpt_collisions
