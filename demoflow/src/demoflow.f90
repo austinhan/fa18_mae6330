@@ -11,9 +11,9 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=1e-2_WP
+  real(WP), parameter :: maxdt=1e-4_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=0.01_WP
+  real(WP), parameter :: viztime=1e-4_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
   integer , parameter :: maxstep=5000
@@ -61,7 +61,7 @@ module demoflow
   real(WP) :: time,CFL,dt,dt_old
   integer  :: ntime,pit,liter
   
-  
+   
   ! Discretization coefficients
   real(WP), dimension(1:nx,1:ny,1:2,-1:+1) :: plap   ! Pressure Laplacian
   real(WP), dimension(2:nx,1:ny,1:2,-1:+1) :: ulap   ! U velocity Laplacian
@@ -120,13 +120,13 @@ program main
      
      ! Some output to the screen
      if (ntime.eq.1) write(*,'(a12,a2,6a12)') 'Step','  ','Time  ','CFLmax','Umax  ','Vmax  ','Divergence','Piterations'
-     write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
+     !write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
 
      ! Velocity step
-     call velocity_step
+     !call velocity_step
      
      ! Pressure step
-     call pressure_step
+     !call pressure_step
 
      ! Particle step (change stuff if two-way)
      
@@ -552,7 +552,7 @@ subroutine time_adjust
   
   ! Adjust time step size
   dt_old=dt
-  dt=min(maxCFL/(CFL+epsilon(1.0_WP))*dt_old,maxdt)
+  !dt=min(maxCFL/(CFL+epsilon(1.0_WP))*dt_old,maxdt)
   if (dt.gt.dt_old) dt=alpha*dt+(1.0_WP-alpha)*dt_old
   
   ! Adams-Bashforth coefficient
