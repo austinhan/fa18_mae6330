@@ -61,6 +61,7 @@ module demoflow
   real(WP) :: time,CFL,dt,dt_old
   integer  :: ntime,pit,liter
   
+  
   ! Discretization coefficients
   real(WP), dimension(1:nx,1:ny,1:2,-1:+1) :: plap   ! Pressure Laplacian
   real(WP), dimension(2:nx,1:ny,1:2,-1:+1) :: ulap   ! U velocity Laplacian
