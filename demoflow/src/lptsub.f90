@@ -8,7 +8,8 @@ module lptsub
     integer :: k,ip,jp
     real(WP) :: fsn,Rep,dtp
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
-    real(WP) :: ksp,eta,lam,dab,fcolx, fcoly ! Spring constant, damping coefficient, force range, distance into particle/wall, collision force (x,y)
+ ! Spring constant, damping coefficient, force range, distance into particle/wall, collision force (x,y), effective mass
+    real(WP) :: ksp,eta,lam,dab,fcolx, fcoly, mab
 end module lptsub
 
 subroutine lpt_init
@@ -19,6 +20,7 @@ subroutine lpt_init
     do i=1,Np
         xp(i)=.5_WP/i
         yp(i)=0.3_WP/i
+        mp(i)=4.0_WP/3.0_WP*pi*(dp/2)**3*rhop
     end do
 
     up=0.0_WP
@@ -31,9 +33,8 @@ subroutine lpt_solve
     use lptsub
     implicit none
     
-
-    liter= 10 !int(dt/taup)
-    dtp=dt/liter
+    ! This time step needs to be matched up with overall flow solver timestep still
+    dtp=0.1*dp/maxval(sqrt(vp**2+up**2))
 
     do k=1,Np
         ! ufp, vfp, fsn
@@ -123,7 +124,6 @@ contains
 
         yvp=ym(j)-dy2
         
-        
         ! interpolate velocities
         ! i=cell right of cell particle is indices
         ufp=1/(xm(i)-xm(i-1))/(2*dy2)*( &
@@ -152,6 +152,9 @@ subroutine lpt_collisions
     implicit none
     fcolx=0
     fcoly=0
+    lam=0.05*dp
+    ksp=mp(k)/(pi**2+log(e)**2)/(100*dtp**2)
+    eta=-2*log(e)*sqrt(mp(k)*ksp)/(pi**2+log(e)**2)
 
     !x force at right wall
     if (mask(ip+1,jp).eq.1) then
@@ -167,7 +170,6 @@ subroutine lpt_collisions
         if (dab.lt.(dp/2+lam)) then
             fcolx=ksp*dab-eta*up(k)
         end if
-
     end if
 
     !y force at top wall

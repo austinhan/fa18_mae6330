@@ -68,7 +68,7 @@ module demoflow
   real(WP) :: ABcoeff                                ! Adams-Bashforth coefficient
   
   ! LPT Stuff
-  real(WP), dimension(Np) :: xp,yp,up,vp
+  real(WP), dimension(Np) :: xp,yp,up,vp,mp
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
