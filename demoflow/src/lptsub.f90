@@ -4,9 +4,11 @@ module lptsub
     real(WP), parameter :: dp=0.1_WP
     real(WP), parameter :: rhop=30.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
+    real(WP), parameter :: e=0.8 ! Coefficient of restitution
     integer :: k
     real(WP) :: fsn,Rep,dtp
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
+    real(WP) :: ksp,eta,lam ! Spring constant, damping coefficient
 end module lptsub
 
 subroutine lpt_init
