@@ -6,7 +6,7 @@ module lptsub
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
     real(WP), parameter :: e=0.8 ! Coefficient of restitution
     integer :: k,ip,jp
-    real(WP) :: fsn,Rep,dtp
+    real(WP) :: fsn,Rep
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
  ! Spring constant, damping coefficient, force range, distance from/into particle/wall, collision force (x,y), effective mass
     real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab
@@ -18,14 +18,16 @@ subroutine lpt_init
     integer :: i
     ! Create initial positions/velocites of particles TBD
     do i=1,Np
-        xp(i)=.5_WP/i
+        xp(i)=.51_WP/i
         yp(i)=0.45_WP/i
         mp(i)=4.0_WP/3.0_WP*pi*(dp/2)**3*rhop
     end do
 
     up=0.0_WP
     vp=0.1_WP
-    liter= 10
+    liter= 1
+    dtp=0.1*dp/sqrt(vp(1)**2+up(1)**2)
+    if (dtp.ge.maxdt) dtp=maxdt
 
 end subroutine
 
@@ -35,6 +37,8 @@ subroutine lpt_solve
     
     ! This time step needs to be matched up with overall flow solver timestep still
     dtp=0.1*dp/sqrt(vp(1)**2+up(1)**2)
+    if (dtp.ge.maxdt) dtp=maxdt
+    liter=1
 
     do k=1,Np
         ! ufp, vfp, fsn
@@ -55,8 +59,8 @@ subroutine lpt_solve
         call lpt_collisions(xp(k),yp(k),up(k),vp(k))
 
         ! Calculate dup/dt
-        dup=fcolx*1000000000.0_WP!fsn*(ufp-up(k))/taup+gravity(1)+fcolx
-        dvp=fcoly*1000000000.0_WP!fsn*(vfp-vp(k))/taup+gravity(2)+fcoly
+        dup=fcolx/mp(k)!fsn*(ufp-up(k))/taup+gravity(1)+fcolx
+        dvp=1000.0_WP*fcoly/mp(k)!fsn*(vfp-vp(k))/taup+gravity(2)+fcoly
 
         
         uphalf=up(k)+dtp/2.0_WP*dup
@@ -80,12 +84,11 @@ subroutine lpt_solve
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
         call lpt_collisions(xphalf,yphalf,uphalf,vphalf)
-        duphalf=1000000000.0_WP*fcolx!fsn*(ufp-uphalf)/taup+gravity(1)+fcolx
-        dvphalf=1000000000.0_WP*fcoly!fsn*(vfp-vphalf)/taup+gravity(2)+fcoly
+        duphalf=fcolx/mp(k)!fsn*(ufp-uphalf)/taup+gravity(1)+fcolx
+        dvphalf=1000.0_WP*fcoly/mp(k)!fsn*(vfp-vphalf)/taup+gravity(2)+fcoly
 
         up(k)=up(k)+dtp*duphalf
         vp(k)=vp(k)+dtp*dvphalf
-        !print *, jp,yp,vp
     end do
     
 contains
@@ -102,7 +105,7 @@ contains
         stppt=x(i)-xpo
         i=i+1
         end do
-
+        i=i-1
         if ((xpo+dx2).lt.x(i)) then
             xvp=x(i-1)
         else
@@ -117,6 +120,7 @@ contains
         stppt=y(j)-ypo
         j=j+1
         end do
+        j=j-1
 
         if ((ypo+dy2).lt.y(j)) then
             yup=y(j-1)
@@ -168,34 +172,32 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     end if
 
     !x force at left wall
-    if (mask(ip,jp).eq.1) then
+    if (mask(ip-1,jp).eq.1) then
         dab=abs(x(ip)-xpc)
         if (dab.lt.(dp/2.0_WP+lam)) then
             delab=abs(dab-dp/2)
             fcolx=ksp*delab-eta*upc
         end if
-        !print *,upc
     end if
 
     !y force at top wall
     if (mask(ip,jp+1).eq.1) then
         dab=abs(y(jp+1)-ypc)
+        delab=((dp/2.0_WP)-dab)
         if (dab.lt.(dp/2.0_WP+lam)) then
-            delab=abs(dab-dp/2)
             fcoly=-ksp*delab-eta*abs(vpc)
-            !print *, vpc, jp, yp, y(jp)
         end if
-        print *, mask(ip,jp), vpc, dab, ypc,y(jp),x(ip)
     end if
 
     !y force at bottom wall
-    if (mask(ip,jp).eq.1) then
+    if (mask(ip,jp-1).eq.1) then
         dab=abs(y(jp)-ypc)
+        delab=(dp/2.0_WP-dab)
         if (dab.lt.(dp/2.0_WP+lam)) then
-            delab=(dab-dp/2)
-            fcoly=ksp*delab-eta*vpc
+            fcoly=ksp*delab+eta*abs(vpc)
         end if
     end if
+    !print *, vpc, ypc, y(jp),dt, dtp
 end subroutine lpt_collisions
 
 end subroutine lpt_solve

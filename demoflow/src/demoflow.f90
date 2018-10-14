@@ -11,9 +11,9 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=1e-4_WP
+  real(WP), parameter :: maxdt=1e-2_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=1e-4_WP
+  real(WP), parameter :: viztime=1e-2_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
   integer , parameter :: maxstep=5000
@@ -70,6 +70,7 @@ module demoflow
   
   ! LPT Stuff
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
+  real(WP) :: dtp
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
@@ -117,7 +118,7 @@ program main
      
      ! Increment time
      time=time+dt; ntime=ntime+1
-     
+     print *, dt, time
      ! Some output to the screen
      if (ntime.eq.1) write(*,'(a12,a2,6a12)') 'Step','  ','Time  ','CFLmax','Umax  ','Vmax  ','Divergence','Piterations'
      !write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
@@ -132,9 +133,7 @@ program main
      
      if (lpttrack.eq.1) then
       write(88,*) xp(1),yp(1),up(1),vp(1)
-      do j=1,liter
-        call lpt_solve
-      end do
+      call lpt_solve
      end if
      ! Dump data for visualization
      call visualize_dump
@@ -553,7 +552,8 @@ subroutine time_adjust
   ! Adjust time step size
   dt_old=dt
   !dt=min(maxCFL/(CFL+epsilon(1.0_WP))*dt_old,maxdt)
-  if (dt.gt.dt_old) dt=alpha*dt+(1.0_WP-alpha)*dt_old
+  !if (dt.gt.dt_old) dt=alpha*dt+(1.0_WP-alpha)*dt_old
+  dt=dtp
   
   ! Adams-Bashforth coefficient
   ABcoeff=0.5_WP*dt/dt_old
