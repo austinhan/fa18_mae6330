@@ -13,7 +13,7 @@ module demoflow
   ! Time integration
   real(WP), parameter :: maxdt=1e-2_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=0.01_WP
+  real(WP), parameter :: viztime=0.001_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
   integer , parameter :: maxstep=5000
@@ -70,6 +70,7 @@ module demoflow
   
   ! LPT Stuff
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
+  real(WP) :: dtp
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
@@ -120,7 +121,7 @@ program main
      
      ! Some output to the screen
      if (ntime.eq.1) write(*,'(a12,a2,6a12)') 'Step','  ','Time  ','CFLmax','Umax  ','Vmax  ','Divergence','Piterations'
-     write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
+     !write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
 
      ! Velocity step
      call velocity_step
@@ -132,7 +133,7 @@ program main
      
      if (lpttrack.eq.1) then
       write(88,*) xp(1),yp(1),up(1),vp(1)
-      do j=1,liter
+      do j=1,1
         call lpt_solve
       end do
      end if
