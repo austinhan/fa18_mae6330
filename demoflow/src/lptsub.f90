@@ -1,8 +1,8 @@
 module lptsub
     use demoflow
     implicit none
-    real(WP), parameter :: dp=0.05_WP
-    real(WP), parameter :: rhop=1.0_WP
+    real(WP), parameter :: dp=0.1_WP
+    real(WP), parameter :: rhop=10.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
     real(WP), parameter :: e=0.8 ! Coefficient of restitution
     integer :: k,ip,jp
@@ -24,7 +24,7 @@ subroutine lpt_init
     end do
 
     up=0.0_WP
-    vp=0.05_WP
+    vp=0.1_WP
     liter= 1
     dtp=0.1*dp/sqrt(vp(1)**2+up(1)**2)
     if (dtp.ge.maxdt) dtp=maxdt
@@ -59,8 +59,8 @@ subroutine lpt_solve
         call lpt_collisions(xp(k),yp(k),up(k),vp(k))
 
         ! Calculate dup/dt
-        dup=fcolx/mp(k)!fsn*(ufp-up(k))/taup+gravity(1)+fcolx
-        dvp=1.0_WP*fcoly/mp(k)!fsn*(vfp-vp(k))/taup+gravity(2)+fcoly
+        dup=fsn*(ufp-up(k))/taup+gravity(1)+fcolx/mp(k)
+        dvp=fsn*(vfp-vp(k))/taup+gravity(2)+fcoly/mp(k)
 
         
         uphalf=up(k)+dtp/2.0_WP*dup
@@ -84,8 +84,8 @@ subroutine lpt_solve
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
         call lpt_collisions(xphalf,yphalf,uphalf,vphalf)
-        duphalf=fcolx/mp(k)!fsn*(ufp-uphalf)/taup+gravity(1)+fcolx
-        dvphalf=1.0_WP*fcoly/mp(k)!fsn*(vfp-vphalf)/taup+gravity(2)+fcoly
+        duphalf=fsn*(ufp-uphalf)/taup+gravity(1)+fcolx/mp(k)
+        dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)+fcoly/mp(k)
 
         up(k)=up(k)+dtp*duphalf
         vp(k)=vp(k)+dtp*dvphalf
@@ -198,11 +198,13 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
         end if
     end if
     !print *, delab,fcoly/mp(k),y(jp+1),dtp*vpc/dp
-    print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp,ksp,mp
+    print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp,ksp,xpc
 
 
     !particle-particle collisions
-    
+    !get normal vector
+
+
 
 end subroutine lpt_collisions
 
