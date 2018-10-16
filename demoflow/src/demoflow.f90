@@ -30,7 +30,7 @@ module demoflow
   ! Fluid Density
   real(WP), parameter :: rho=1.0_WP
   ! Dynamic Viscosity
-  real(WP), parameter :: mu=1.0_WP
+  real(WP), parameter :: mu=0.01_WP
   ! Kinematic viscosity
   real(WP), parameter :: knu=mu/rho
   ! Gravity
@@ -70,7 +70,7 @@ module demoflow
   
   ! LPT Stuff
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
-  real(WP) :: dtp
+  real(WP) :: dtp, timep
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
@@ -132,7 +132,8 @@ program main
      ! Particle step (change stuff if two-way)
      
      if (lpttrack.eq.1) then
-      write(88,*) xp(1),yp(1),up(1),vp(1)
+      write(88,*) xp(1),yp(1),up(1),vp(1),timep
+      timep=timep+dtp
       do j=1,1
         call lpt_solve
       end do

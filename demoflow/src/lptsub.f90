@@ -2,7 +2,7 @@ module lptsub
     use demoflow
     implicit none
     real(WP), parameter :: dp=0.05_WP
-    real(WP), parameter :: rhop=1.0_WP
+    real(WP), parameter :: rhop=10.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
     real(WP), parameter :: e=0.8 ! Coefficient of restitution
     integer :: k,ip,jp
@@ -10,6 +10,8 @@ module lptsub
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
  ! Spring constant, damping coefficient, force range, distance from/into particle/wall, collision force (x,y), effective mass
     real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab
+    integer :: ii,jj
+    real(WP), dimension(Np,Np*2) :: norm
 end module lptsub
 
 subroutine lpt_init
@@ -24,7 +26,7 @@ subroutine lpt_init
     end do
 
     up=0.0_WP
-    vp=0.05_WP
+    vp=0.4_WP
     liter= 1
     dtp=0.1*dp/sqrt(vp(1)**2+up(1)**2)
     if (dtp.ge.maxdt) dtp=maxdt
@@ -59,8 +61,8 @@ subroutine lpt_solve
         call lpt_collisions(xp(k),yp(k),up(k),vp(k))
 
         ! Calculate dup/dt
-        dup=fcolx/mp(k)!fsn*(ufp-up(k))/taup+gravity(1)+fcolx
-        dvp=1.0_WP*fcoly/mp(k)!fsn*(vfp-vp(k))/taup+gravity(2)+fcoly
+        dup=fsn*(ufp-up(k))/taup+gravity(1)+fcolx/mp(k)
+        dvp=fsn*(vfp-vp(k))/taup+gravity(2)+fcoly/mp(k)
 
         
         uphalf=up(k)+dtp/2.0_WP*dup
@@ -84,8 +86,8 @@ subroutine lpt_solve
         call lpt_fvel(xphalf,yphalf)
         ! Calculate dup/dt half
         call lpt_collisions(xphalf,yphalf,uphalf,vphalf)
-        duphalf=fcolx/mp(k)!fsn*(ufp-uphalf)/taup+gravity(1)+fcolx
-        dvphalf=1.0_WP*fcoly/mp(k)!fsn*(vfp-vphalf)/taup+gravity(2)+fcoly
+        duphalf=fsn*(ufp-uphalf)/taup+gravity(1)+fcolx/mp(k)
+        dvphalf=fsn*(vfp-vphalf)/taup+gravity(2)+fcoly/mp(k)
 
         up(k)=up(k)+dtp*duphalf
         vp(k)=vp(k)+dtp*dvphalf
@@ -198,12 +200,25 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
         end if
     end if
     !print *, delab,fcoly/mp(k),y(jp+1),dtp*vpc/dp
-    print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp,ksp,mp
+    print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp, dab, dp/2
 
 
     !particle-particle collisions
     
 
+
+    !particle-particle collisions
+
+    !get normal vector
+    do ii=1,Np
+        ! loop over all points
+         do jj=1,Np
+            norm(ii,2*jj-1) = (xp(jj)-xpc)/(sqrt((xpc-xp(jj))**2+(ypc-yp(k))**2)) ! x-normal of particle ii with particle jj
+            norm(ii,2*jj  ) = (yp(jj)-ypc)/(sqrt((xpc-xp(jj))**2+(ypc-yp(k))**2)) ! y-normal of particle ii with particle jj
+        end do
+    end do
+
+!print *, norm(2,1),xpc
 end subroutine lpt_collisions
 
 end subroutine lpt_solve
