@@ -30,14 +30,14 @@ module demoflow
   ! Fluid Density
   real(WP), parameter :: rho=1.0_WP
   ! Dynamic Viscosity
-  real(WP), parameter :: mu=0.01_WP
+  real(WP), parameter :: mu=0.00001_WP
   ! Kinematic viscosity
   real(WP), parameter :: knu=mu/rho
   ! Gravity
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
   integer, parameter :: lpttrack=1
-  integer, parameter :: Np=1
+  integer, parameter :: Np=2
   
   ! ==========================================
   

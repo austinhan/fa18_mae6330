@@ -11,7 +11,7 @@ module lptsub
  ! Spring constant, damping coefficient, force range, distance from/into particle/wall, collision force (x,y), effective mass
     real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab
     integer :: ii,jj
-    real(WP), dimension(Np,Np*2) :: norm
+    real(WP), dimension(1,2) :: norm
 end module lptsub
 
 subroutine lpt_init
@@ -24,6 +24,7 @@ subroutine lpt_init
         yp(i)=0.45_WP/i
         mp(i)=4.0_WP/3.0_WP*pi*(dp/2)**3*rhop
     end do
+    mab=1/(1/mp(1)+1/mp(2))
 
     up=0.0_WP
     vp=0.4_WP
@@ -200,25 +201,21 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
         end if
     end if
     !print *, delab,fcoly/mp(k),y(jp+1),dtp*vpc/dp
-    print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp, dab, dp/2
+    !print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp, dab, dp/2
 
-
-    !particle-particle collisions
-    
-
-
-    !particle-particle collisions
-
-    !get normal vector
-    do ii=1,Np
-        ! loop over all points
-         do jj=1,Np
-            norm(ii,2*jj-1) = (xp(jj)-xpc)/(sqrt((xpc-xp(jj))**2+(ypc-yp(k))**2)) ! x-normal of particle ii with particle jj
-            norm(ii,2*jj  ) = (yp(jj)-ypc)/(sqrt((xpc-xp(jj))**2+(ypc-yp(k))**2)) ! y-normal of particle ii with particle jj
-        end do
+    ! get normal vector
+    ! loop over all points
+    norm=0
+    do jj=1,Np
+        dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
+        if (dab.gt.(dp/2.0_WP+lam).and.(dab.gt.10e-7)) then
+            norm(1,1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
+            norm(1,2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
+        end if
     end do
 
-!print *, norm(2,1),xpc
+print *, norm(1,1), norm(1,2), yp(1),yp(2)
+
 end subroutine lpt_collisions
 
 end subroutine lpt_solve
