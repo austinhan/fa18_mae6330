@@ -1,7 +1,7 @@
 module lptsub
     use demoflow
     implicit none
-    real(WP), parameter :: dp=0.01_WP
+    real(WP), parameter :: dp=0.05_WP
     real(WP), parameter :: rhop=1.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
     real(WP), parameter :: e=0.8 ! Coefficient of restitution
@@ -24,7 +24,7 @@ subroutine lpt_init
     end do
 
     up=0.0_WP
-    vp=0.1_WP
+    vp=0.05_WP
     liter= 1
     dtp=0.1*dp/sqrt(vp(1)**2+up(1)**2)
     if (dtp.ge.maxdt) dtp=maxdt
@@ -159,14 +159,14 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     fcolx=0.0_WP
     fcoly=0.0_WP
     lam=0.05_WP*dp
-    ksp=mp(k)/(pi**2+log(e)**2)/(100.0_WP*dtp**2)
-    eta=-2.0_WP*log(e)*sqrt(mp(k)*ksp)/(pi**2+log(e)**2)
+    ksp=mp(k)/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
+    eta=-2.0_WP*log(e)*sqrt(mp(k)*ksp/(pi**2+log(e)**2))
 
     !x force at right wall
     if (mask(ip+1,jp).eq.1) then
         dab=abs(x(ip+1)-xpc)
-        if (dab.lt.(dp/2.0_WP+lam)) then
-            delab=abs(dab-dp/2)
+        delab=abs(dab-dp/2)
+        if (dab.lt.(dp/2.0_WP+lam)) then            
             fcolx=-ksp*delab-eta*upc
         end if
     end if
@@ -174,16 +174,16 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     !x force at left wall
     if (mask(ip-1,jp).eq.1) then
         dab=abs(x(ip)-xpc)
+        delab=abs(dab-dp/2)
         if (dab.lt.(dp/2.0_WP+lam)) then
-            delab=abs(dab-dp/2)
-            fcolx=ksp*delab-eta*upc
+            fcolx=ksp*delab+eta*upc
         end if
     end if
 
     !y force at top wall
     if (mask(ip,jp+1).eq.1) then
         dab=abs(y(jp+1)-ypc)
-        delab=((dp/2.0_WP)-dab)
+        delab=abs((dp/2.0_WP)-dab)
         if (dab.lt.(dp/2.0_WP+lam)) then
             fcoly=-ksp*delab-eta*abs(vpc)
         end if
@@ -192,12 +192,18 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     !y force at bottom wall
     if (mask(ip,jp-1).eq.1) then
         dab=abs(y(jp)-ypc)
-        delab=(dp/2.0_WP-dab)
+        delab=abs(dp/2.0_WP-dab)
         if (dab.lt.(dp/2.0_WP+lam)) then
             fcoly=ksp*delab+eta*abs(vpc)
         end if
     end if
-    !print *, vpc, ypc, y(jp),dt, dtp
+    !print *, delab,fcoly/mp(k),y(jp+1),dtp*vpc/dp
+    print *, vpc, ypc, y(jp),fcoly/mp(k)*dtp,ksp,mp
+
+
+    !particle-particle collisions
+    
+
 end subroutine lpt_collisions
 
 end subroutine lpt_solve
