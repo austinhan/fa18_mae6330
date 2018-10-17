@@ -9,9 +9,9 @@ module lptsub
     real(WP) :: fsn,Rep
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
  ! Spring constant, damping coefficient, force range, distance from/into particle/wall, collision force (x,y), effective mass
-    real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab
+    real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab,fcolt
     integer :: ii,jj
-    real(WP), dimension(1,2) :: norm
+    real(WP), dimension(2) :: norm
 end module lptsub
 
 subroutine lpt_init
@@ -170,7 +170,7 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
         dab=abs(x(ip+1)-xpc)
         delab=abs(dab-dp/2)
         if (dab.lt.(dp/2.0_WP+lam)) then            
-            fcolx=-ksp*delab-eta*upc
+            fcolx=-ksp*delab-eta*abs(upc)
         end if
     end if
 
@@ -179,7 +179,7 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
         dab=abs(x(ip)-xpc)
         delab=abs(dab-dp/2)
         if (dab.lt.(dp/2.0_WP+lam)) then
-            fcolx=ksp*delab+eta*upc
+            fcolx=ksp*delab+eta*abs(upc)
         end if
     end if
 
@@ -208,13 +208,20 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     norm=0
     do jj=1,Np
         dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
-        if (dab.gt.(dp/2.0_WP+lam).and.(dab.gt.10e-7)) then
-            norm(1,1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
-            norm(1,2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
+        if (dab.lt.(dp+lam).and.(dab.gt.10e-7)) then
+            norm(1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
+            norm(2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
+            mab = 1/(1/mp(k)+mp(jj))
+            delab=abs(dp-dab)
+            ksp=mab/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
+            eta=-2.0_WP*log(e)*sqrt(mab*ksp/(pi**2+log(e)**2))
+            fcolt=abs(-ksp*delab-eta*abs(sqrt(vp(1)**2+up(1)**2)))
+            fcolx=fcolt*norm(1)
+            fcoly=fcolt*norm(2)
         end if
     end do
 
-print *, norm(1,1), norm(1,2), yp(1),yp(2)
+print *, norm(1), norm(2), yp(1),yp(2)
 
 end subroutine lpt_collisions
 
