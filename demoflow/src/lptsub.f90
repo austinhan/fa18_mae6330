@@ -1,7 +1,7 @@
 module lptsub
     use demoflow
     implicit none
-    real(WP), parameter :: dp=0.05_WP
+    real(WP), parameter :: dp=0.025_WP
     real(WP), parameter :: rhop=10.0_WP
     real(WP), parameter :: taup=rhop*dp**2.0_WP/mu/18.0_WP
     real(WP), parameter :: e=0.8 ! Coefficient of restitution
@@ -17,17 +17,27 @@ end module lptsub
 subroutine lpt_init
     use lptsub
     implicit none
-    integer :: i
+    integer :: i,step
     ! Create initial positions/velocites of particles TBD
+    k=1
     do i=1,Np
-        xp(i)=.51_WP/i
-        yp(i)=0.45_WP/i
-        mp(i)=4.0_WP/3.0_WP*pi*(dp/2)**3*rhop
+        xp(i)=i*0.099_WP-0.995_WP*(k-1)-0.04_WP
+        if (xp(i).lt.0.05_WP) xp(i)=xp(i)+0.3_WP
+        yp(i)=0.49_WP - 0.05_WP*(k-1)
+        mp(i)=4.0_WP/3.0_WP*pi*(dp/2.0_WP)**3*rhop
+        if (mod(i,10).eq.0) k=k+1
+        print *, xp(i),yp(i),k,i,mod(i,10)
     end do
+    !xp(1)=0.5_WP
+    !yp(1)=0.0_WP
+    !xp(2)=0.4_WP
+    !yp(2)=-0.1_WP
     mab=1/(1/mp(1)+1/mp(2))
 
-    up=0.0_WP
-    vp=0.4_WP
+    !up(1)=-0.2_WP
+    !vp(1)=-0.2_WP
+    !up(2)=0.2_WP
+    !vp(2)=0.2_WP
     liter= 1
     dtp=0.1*dp/sqrt(vp(1)**2+up(1)**2)
     if (dtp.ge.maxdt) dtp=maxdt
@@ -206,9 +216,10 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     ! get normal vector
     ! loop over all points
     norm=0
-    do jj=1,Np
+    fcolt=0.0_WP
+    do jj=1,Np 
         dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
-        if (dab.lt.(dp+lam).and.(dab.gt.10e-7)) then
+        if (dab.lt.(dp+lam).and.(k.ne.jj)) then
             norm(1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
             norm(2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
             mab = 1/(1/mp(k)+mp(jj))
@@ -216,12 +227,12 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
             ksp=mab/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
             eta=-2.0_WP*log(e)*sqrt(mab*ksp/(pi**2+log(e)**2))
             fcolt=abs(-ksp*delab-eta*abs(sqrt(vp(1)**2+up(1)**2)))
-            fcolx=fcolt*norm(1)
-            fcoly=fcolt*norm(2)
+            fcolx=-fcolt*norm(1)+fcolx
+            fcoly=-fcolt*norm(2)+fcoly
         end if
     end do
 
-print *, norm(1), norm(2), yp(1),yp(2)
+!print *, norm(1), k, fcolx,xp(1),xp(2),up(k)
 
 end subroutine lpt_collisions
 

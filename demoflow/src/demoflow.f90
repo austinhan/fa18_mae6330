@@ -11,9 +11,9 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=1e-3_WP
+  real(WP), parameter :: maxdt=4e-3_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=0.001_WP
+  real(WP), parameter :: viztime=0.04_WP
   ! End of time integration
   real(WP), parameter :: maxtime=20.0_WP
   integer , parameter :: maxstep=5000
@@ -22,22 +22,22 @@ module demoflow
   real(WP), parameter :: abscvg=1.0e-4_WP
   integer , parameter :: maxpit=100
   ! Mesh size
-  integer,  parameter :: nx=400
+  integer,  parameter :: nx=40
   integer,  parameter :: ny=42
   ! Domain size
-  real(WP), parameter :: Lx=10.0_WP
+  real(WP), parameter :: Lx=1.0_WP
   real(WP), parameter :: Ly=1.05_WP
   ! Fluid Density
   real(WP), parameter :: rho=1.0_WP
   ! Dynamic Viscosity
-  real(WP), parameter :: mu=0.00001_WP
+  real(WP), parameter :: mu=0.0005_WP
   ! Kinematic viscosity
   real(WP), parameter :: knu=mu/rho
   ! Gravity
-  real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
+  real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,-0.1_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
   integer, parameter :: lpttrack=1
-  integer, parameter :: Np=2
+  integer, parameter :: Np=200
   
   ! ==========================================
   
@@ -187,6 +187,8 @@ subroutine demoflow_setup
   mask=0
   mask(:,1 )=1
   mask(:,ny)=1
+  mask(1,: )=1
+  mask(nx,:)=1
   
   ! Initial conditions
   U=0.0_WP
