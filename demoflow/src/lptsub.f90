@@ -9,7 +9,7 @@ module lptsub
     real(WP) :: fsn,Rep
     real(WP) :: ufp,vfp,xphalf,yphalf,dup,dvp,uphalf,vphalf,duphalf,dvphalf
  ! Spring constant, damping coefficient, force range, distance from/into particle/wall, collision force (x,y), effective mass
-    real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab,fcolt
+    real(WP) :: ksp,eta,lam,dab,delab,fcolx, fcoly, mab,fcolt,ksp2
     integer :: ii,jj
     real(WP), dimension(2) :: norm
 end module lptsub
@@ -107,7 +107,7 @@ subroutine lpt_solve
 contains
     subroutine lpt_fvel(xpo,ypo)
         implicit none
-        integer :: i,j
+        integer :: i,j,l
         real(WP) :: xpo,ypo,stppt,magud,dx2,dy2,xvp,yup,xup,yvp
         stppt=-1
         dx2=(x(2)-x(1))/2
@@ -161,7 +161,9 @@ contains
         Rep=dp*magud/knu
         fsn=1+0.15*Rep**0.687
         ip=i-1
+        ipc(k)=ip
         jp=j-1
+        jpc(k)=jp
         return
     end subroutine lpt_fvel
 
@@ -173,7 +175,31 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     fcoly=0.0_WP
     lam=0.05_WP*dp
     ksp=mp(k)/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
+    ksp2=-3*dp*(maxval(yp)-ypc)*rhop*gravity(2)
+    if (ksp2.gt.ksp.and.time.gt.0.1_WP)ksp=ksp2
     eta=-2.0_WP*log(e)*sqrt(mp(k)*ksp/(pi**2+log(e)**2))
+
+    norm=0
+    fcolt=0.0_WP
+    do jj=1,Np
+        !if ((abs(jpc(jj)-jp).le.1).and.(abs(ipc(jj)-ip).le.1)) then
+             dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
+        !else
+        !    dab=1.0_WP
+        !end if
+        if (dab.lt.(dp+lam).and.(k.ne.jj)) then
+            norm(1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
+            norm(2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
+            mab = 1/(1/mp(k)+mp(jj))
+            delab=abs(dp-dab)
+            ksp=mab/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
+            if (ksp2.gt.ksp.and.time.gt.0.1_WP) ksp=ksp2
+            eta=-2.0_WP*log(e)*sqrt(mab*ksp/(pi**2+log(e)**2))
+            fcolt=abs(-ksp*delab-eta*abs(sqrt(vp(1)**2+up(1)**2)))
+            fcolx=-fcolt*norm(1)+fcolx
+            fcoly=-fcolt*norm(2)+fcoly
+        end if
+    end do
 
     !x force at right wall
     if (mask(ip+1,jp).eq.1) then
@@ -215,22 +241,7 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
 
     ! get normal vector
     ! loop over all points
-    norm=0
-    fcolt=0.0_WP
-    do jj=1,Np 
-        dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
-        if (dab.lt.(dp+lam).and.(k.ne.jj)) then
-            norm(1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
-            norm(2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
-            mab = 1/(1/mp(k)+mp(jj))
-            delab=abs(dp-dab)
-            ksp=mab/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
-            eta=-2.0_WP*log(e)*sqrt(mab*ksp/(pi**2+log(e)**2))
-            fcolt=abs(-ksp*delab-eta*abs(sqrt(vp(1)**2+up(1)**2)))
-            fcolx=-fcolt*norm(1)+fcolx
-            fcoly=-fcolt*norm(2)+fcoly
-        end if
-    end do
+
 
 !print *, norm(1), k, fcolx,xp(1),xp(2),up(k)
 

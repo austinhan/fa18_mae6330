@@ -15,8 +15,8 @@ module demoflow
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.04_WP
   ! End of time integration
-  real(WP), parameter :: maxtime=20.0_WP
-  integer , parameter :: maxstep=5000
+  real(WP), parameter :: maxtime=30.0_WP
+  integer , parameter :: maxstep=10000
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
   real(WP), parameter :: abscvg=1.0e-4_WP
@@ -71,6 +71,7 @@ module demoflow
   ! LPT Stuff
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
   real(WP) :: dtp, timep
+  integer, dimension(Np) :: ipc,jpc
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
