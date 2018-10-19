@@ -19,14 +19,14 @@ subroutine lpt_init
     implicit none
     integer :: i,step
     ! Create initial positions/velocites of particles TBD
-    k=1
+    step=1
     do i=1,Np
-        xp(i)=i*0.099_WP-0.995_WP*(k-1)-0.04_WP
+        xp(i)=i*0.029_WP-1.161_WP*(step-1)-0.02_WP
         if (xp(i).lt.0.05_WP) xp(i)=xp(i)+0.3_WP
-        yp(i)=0.49_WP - 0.05_WP*(k-1)
+        yp(i)=0.62_WP - 0.05_WP*(step-1)
         mp(i)=4.0_WP/3.0_WP*pi*(dp/2.0_WP)**3*rhop
-        if (mod(i,10).eq.0) k=k+1
-        print *, xp(i),yp(i),k,i,mod(i,10)
+        if (mod(i,40).eq.0) step=step+1
+        !print *, xp(i),yp(i),k,i,mod(i,10)
     end do
     !xp(1)=0.5_WP
     !yp(1)=0.0_WP

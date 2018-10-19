@@ -22,11 +22,11 @@ module demoflow
   real(WP), parameter :: abscvg=1.0e-4_WP
   integer , parameter :: maxpit=100
   ! Mesh size
-  integer,  parameter :: nx=40
-  integer,  parameter :: ny=42
+  integer,  parameter :: nx=50
+  integer,  parameter :: ny=50
   ! Domain size
-  real(WP), parameter :: Lx=1.0_WP
-  real(WP), parameter :: Ly=1.05_WP
+  real(WP), parameter :: Lx=1.25_WP
+  real(WP), parameter :: Ly=1.25_WP
   ! Fluid Density
   real(WP), parameter :: rho=1.0_WP
   ! Dynamic Viscosity
@@ -37,7 +37,7 @@ module demoflow
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,-0.1_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
   integer, parameter :: lpttrack=1
-  integer, parameter :: Np=200
+  integer, parameter :: Np=1000
   
   ! ==========================================
   
@@ -121,7 +121,7 @@ program main
      
      ! Some output to the screen
      if (ntime.eq.1) write(*,'(a12,a2,6a12)') 'Step','  ','Time  ','CFLmax','Umax  ','Vmax  ','Divergence','Piterations'
-     !write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
+     write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
 
      ! Velocity step
      call velocity_step
@@ -186,7 +186,7 @@ subroutine demoflow_setup
   ! Mask out walls
   mask=0
   mask(:,1 )=1
-  mask(:,ny)=1
+  !mask(:,ny)=1
   mask(1,: )=1
   mask(nx,:)=1
   
