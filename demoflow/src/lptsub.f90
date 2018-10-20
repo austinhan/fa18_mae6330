@@ -98,8 +98,6 @@ subroutine lpt_solve
         ! new ufp,vfp -> magud
         ! new Rep -> fsn
         call lpt_fvel(xphalf,yphalf)
-        near=((abs(jpc-jp).le.1).and.(abs(ipc-ip).le.1))
-        indices=pack(list,near)
         ! Calculate dup/dt half
         call lpt_collisions(xphalf,yphalf,uphalf,vphalf)
         duphalf=fsn*(ufp-uphalf)/taup+gravity(1)+fcolx/mp(k)
@@ -187,11 +185,7 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     norm=0
     fcolt=0.0_WP
     do jj=1,size(indices)
-        !if ((abs(jpc(jj)-jp).le.1).and.(abs(ipc(jj)-ip).le.1)) then
-             dab = sqrt((xpc-xp(indices(jj)))**2+(ypc-yp(indices(jj)))**2)
-        !else
-        !    dab=1.0_WP
-        !end if
+        dab = sqrt((xpc-xp(indices(jj)))**2+(ypc-yp(indices(jj)))**2)
         if (dab.lt.(dp+lam).and.(k.ne.indices(jj))) then
             norm(1) = (xp(indices(jj))-xpc)/dab ! x-normal of particle with particle jj
             norm(2) = (yp(indices(jj))-ypc)/dab ! y-normal of particle with particle jj
