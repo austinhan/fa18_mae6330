@@ -184,9 +184,6 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
     do jj=1,Np
         if ((abs(jpc(jj)-jp).le.1).and.(abs(ipc(jj)-ip).le.1)) then
              dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
-        else
-            dab=1.0_WP
-        end if
         if (dab.lt.(dp+lam).and.(k.ne.jj)) then
             norm(1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
             norm(2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
@@ -198,6 +195,7 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
             fcolt=abs(-ksp*delab-eta*abs(sqrt(vp(1)**2+up(1)**2)))
             fcolx=-fcolt*norm(1)+fcolx
             fcoly=-fcolt*norm(2)+fcoly
+        end if
         end if
     end do
 
