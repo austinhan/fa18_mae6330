@@ -71,7 +71,9 @@ module demoflow
   ! LPT Stuff
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
   real(WP) :: dtp, timep
-  integer, dimension(Np) :: ipc,jpc
+  integer, dimension(Np) :: ipc,jpc, list
+  integer, allocatable, dimension(:) :: indices
+  logical, dimension(Np) :: near 
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi

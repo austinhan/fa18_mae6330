@@ -26,6 +26,7 @@ subroutine lpt_init
         yp(i)=0.62_WP - 0.05_WP*(step-1)
         mp(i)=4.0_WP/3.0_WP*pi*(dp/2.0_WP)**3*rhop
         if (mod(i,40).eq.0) step=step+1
+        list(i)=i
         !print *, xp(i),yp(i),k,i,mod(i,10)
     end do
     !xp(1)=0.5_WP
@@ -56,6 +57,8 @@ subroutine lpt_solve
     do k=1,Np
         ! ufp, vfp, fsn
         call lpt_fvel(xp(k),yp(k))
+        near=((abs(jpc-jp).le.1).and.(abs(ipc-ip).le.1))
+        indices=pack(list,near)
         xphalf=xp(k)+dtp/2.0_WP*up(k)
         yphalf=yp(k)+dtp/2.0_WP*vp(k)
         ! Periodic BC
@@ -95,6 +98,8 @@ subroutine lpt_solve
         ! new ufp,vfp -> magud
         ! new Rep -> fsn
         call lpt_fvel(xphalf,yphalf)
+        near=((abs(jpc-jp).le.1).and.(abs(ipc-ip).le.1))
+        indices=pack(list,near)
         ! Calculate dup/dt half
         call lpt_collisions(xphalf,yphalf,uphalf,vphalf)
         duphalf=fsn*(ufp-uphalf)/taup+gravity(1)+fcolx/mp(k)
@@ -107,7 +112,7 @@ subroutine lpt_solve
 contains
     subroutine lpt_fvel(xpo,ypo)
         implicit none
-        integer :: i,j,l
+        integer :: i,j
         real(WP) :: xpo,ypo,stppt,magud,dx2,dy2,xvp,yup,xup,yvp
         stppt=-1
         dx2=(x(2)-x(1))/2
@@ -181,16 +186,16 @@ subroutine lpt_collisions(xpc,ypc,upc,vpc)
 
     norm=0
     fcolt=0.0_WP
-    do jj=1,Np
+    do jj=1,size(indices)
         !if ((abs(jpc(jj)-jp).le.1).and.(abs(ipc(jj)-ip).le.1)) then
-             dab = sqrt((xpc-xp(jj))**2+(ypc-yp(jj))**2)
+             dab = sqrt((xpc-xp(indices(jj)))**2+(ypc-yp(indices(jj)))**2)
         !else
         !    dab=1.0_WP
         !end if
-        if (dab.lt.(dp+lam).and.(k.ne.jj)) then
-            norm(1) = (xp(jj)-xpc)/dab ! x-normal of particle with particle jj
-            norm(2) = (yp(jj)-ypc)/dab ! y-normal of particle with particle jj
-            mab = 1/(1/mp(k)+mp(jj))
+        if (dab.lt.(dp+lam).and.(k.ne.indices(jj))) then
+            norm(1) = (xp(indices(jj))-xpc)/dab ! x-normal of particle with particle jj
+            norm(2) = (yp(indices(jj))-ypc)/dab ! y-normal of particle with particle jj
+            mab = 1/(1/mp(k)+mp(indices(jj)))
             delab=abs(dp-dab)
             ksp=mab/((pi**2+log(e)**2)*(100.0_WP*dtp**2))
             if (ksp2.gt.ksp.and.time.gt.0.1_WP) ksp=ksp2
