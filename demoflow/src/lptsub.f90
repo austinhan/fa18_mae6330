@@ -32,7 +32,7 @@ subroutine lpt_init
     !yp(1)=0.0_WP
     !xp(2)=0.4_WP
     !yp(2)=-0.1_WP
-    mab=1/(1/mp(1)+1/mp(2))
+    !mab=1/(1/mp(1)+1/mp(2))
 
     !up(1)=-0.2_WP
     !vp(1)=-0.2_WP
@@ -107,7 +107,7 @@ subroutine lpt_solve
 contains
     subroutine lpt_fvel(xpo,ypo)
         implicit none
-        integer :: i,j,l
+        integer :: i,j
         real(WP) :: xpo,ypo,stppt,magud,dx2,dy2,xvp,yup,xup,yvp
         stppt=-1
         dx2=(x(2)-x(1))/2

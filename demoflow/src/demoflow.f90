@@ -22,11 +22,11 @@ module demoflow
   real(WP), parameter :: abscvg=1.0e-4_WP
   integer , parameter :: maxpit=100
   ! Mesh size
-  integer,  parameter :: nx=50
-  integer,  parameter :: ny=50
+  integer,  parameter :: nx=100
+  integer,  parameter :: ny=100
   ! Domain size
-  real(WP), parameter :: Lx=1.25_WP
-  real(WP), parameter :: Ly=1.25_WP
+  real(WP), parameter :: Lx=1_WP
+  real(WP), parameter :: Ly=1_WP
   ! Fluid Density
   real(WP), parameter :: rho=1.0_WP
   ! Dynamic Viscosity
@@ -36,8 +36,10 @@ module demoflow
   ! Gravity
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,-0.1_WP/)
   ! Include Lagrange Particle Tracking (1=yes)
-  integer, parameter :: lpttrack=1
-  integer, parameter :: Np=1000
+  integer, parameter :: lpttrack=0
+  integer, parameter :: Np=1
+  ! Include Levelset (1=yes)
+  integer, parameter :: lvltrack=1
   
   ! ==========================================
   
@@ -105,7 +107,12 @@ program main
   ! Initialize particle tracking
   if (lpttrack.eq.1) then
      open(unit=88,file='part.txt',action="write")
-     call lpt_init
+     !call lpt_init
+  end if
+
+  ! Initialize levelset
+  if (lvltrack.eq.1) then
+    call levelsetinit
   end if
 
   ! Initialize visualization
@@ -170,7 +177,7 @@ subroutine demoflow_setup
   
   ! Initialize mesh
   do i=1,nx+1
-     x(i)=real(i-1,WP)*Lx/real(nx,WP)
+     x(i)=real(i-1,WP)*Lx/real(nx,WP)-0.5*Lx
   end do
   do j=1,ny+1
      y(j)=real(j-1,WP)*Ly/real(ny,WP)-0.5_WP*Ly
