@@ -26,9 +26,9 @@ subroutine levelsetinit
         if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.0.1)) then
             phi(i,j)= -min(sqrt((xm(i)+0.025)**2+(ym(j)-0.1)**2), sqrt((xm(i)-0.025)**2+(ym(j)-0.1)**2))
         
-        ! Inside slot, not done
-        else if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.0.1)) then
-            phi(i,j)=0
+        ! Inside slot
+        else if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.0.35)) then
+            phi(i,j)=-min(-xm(i)+0.025_WP,xm(i)+0.025_WP,0.35-ym(j))
 
         ! Inside circle, bottom left corner
         else if ((xm(i).gt.cx) .and. (xm(i).lt. -0.025_WP) .and. (ym(j).lt. 0.35_WP)) then
@@ -52,10 +52,12 @@ subroutine levelsetinit
 
             
         ! Outside Circle and slot extended
-        else
+        else if ((sqrt(xm(i)**2+(ym(j)-0.25)**2)).gt.0.15) then
             phi(i,j) = -sqrt((xm(i)-cx)**2 + (ym(j)-cy)**2)
         end if
 
+
+        !phi=-phi
         ! Edges
         phi(0,:)=phi(1,:)
         phi(nx+1,:)=phi(nx,:)
