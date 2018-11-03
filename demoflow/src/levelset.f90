@@ -4,12 +4,17 @@ implicit none
 real(WP) :: cx,cy
 real(WP) :: phihxp,phihyp,phihxm,phihym,Vhp,Vhm,Uhp,Uhm
 integer :: iphi,jphi
-real(WP), dimension(0:nx+1,0:ny+1) :: phinew
+real(WP), dimension(0:nx+1,0:ny+1) :: Hphi1,Hphi2
 
 end module
 
 subroutine levelsetinit
     use levelset
+
+    ! Initialize residuals
+    Hphi1=0.0_WP
+    Hphi2=0.0_WP
+
     open(unit=88,file='lvlset.txt',action="write")
     do i=1,nx
         do j=1,ny
@@ -58,7 +63,7 @@ subroutine levelsetinit
         phi(nx+1,:)=phi(nx,:)
         phi(:,0)=phi(:,1)
         phi(:,ny+1)=phi(:,ny)
-        phinew=phi
+        !phinew=phi
         end do
     end do
 write(88,*) phi
@@ -67,50 +72,54 @@ end subroutine
 subroutine levelset_step
     use levelset
 
-    do i=2,nx-1
-        do j=2,ny-1
+    ! Remember previous residual
+    Hphi2=Hphi1; Hphi1=0.0_WP
 
-            Uhp=U(i+1,j)/2+U(i,j)/2
-            Uhm=U(i-1,j)/2+U(i,j)/2
-            Vhp=V(i,j+1)/2+V(i,j)/2
-            Vhm=V(i,j-1)/2+V(i,j)/2
+    do i=1,nx
+        do j=1,ny
+
+            Uhp=U(i+1,j)/2.0_WP+U(i,j)/2.0_WP
+            Uhm=U(i-1,j)/2.0_WP+U(i,j)/2.0_WP
+            Vhp=V(i,j+1)/2.0_WP+V(i,j)/2.0_WP
+            Vhm=V(i,j-1)/2.0_WP+V(i,j)/2.0_WP
 
             if (Uhp.lt.0.0_WP) then
-                phihxp= -phi(i,j)/6+5/6*phi(i+1,j)+phi(i+2,j)/3
+                phihxp= -phi(i,j)/6.0_WP+5.0_WP*phi(i+1,j)/6.0_WP+phi(i+2,j)/3.0_WP
             else
-                phihxp=  phi(i-1,j)/3+5*phi(i,j)/6-phi(i+1,j)/6
+                phihxp=  phi(i-1,j)/3.0_WP+5.0_WP*phi(i,j)/6.0_WP-phi(i+1,j)/6.0_WP
             end if
 
             if (Uhm.lt.0.0_WP) then
-                phihxm= -phi(i-1,j)/6+5/6*phi(i,j)+phi(i+1,j)/3
+                phihxm= -phi(i-1,j)/6.0_WP+5.0_WP*phi(i,j)/6.0_WP+phi(i+1,j)/3.0_WP
             else
-                phihxm=  phi(i-2,j)/3+5*phi(i-1,j)/6-phi(i,j)/6
+                phihxm=  phi(i-2,j)/3.0_WP+5.0_WP*phi(i-1,j)/6.0_WP-phi(i,j)/6.0_WP
             end if
 
             if (Vhp.lt.0.0_WP) then
-                phihyp=-phi(i,j)/6+5/6*phi(i,j+1)+phi(i,j+2)/3
+                phihyp= -phi(i,j)/6.0_WP+5.0_WP*phi(i,j+1)/6.0_WP+phi(i,j+2)/3.0_WP
             else
-                phihyp=phi(i,j-1)/3+5*phi(i,j)/6-phi(i,j+1)/6
+                phihyp=  phi(i,j-1)/3.0_WP+5.0_WP*phi(i,j)/6.0_WP-phi(i,j+1)/6.0_WP
             end if
 
             if (Vhm.lt.0.0_WP) then
-                phihym=-phi(i,j-1)/6+5/6*phi(i,j)+phi(i,j+1)/3
+                phihym= -phi(i,j-1)/6.0_WP+5.0_WP*phi(i,j)/6.0_WP+phi(i,j+1)/3.0_WP
             else
-                phihym=phi(i,j-2)/3+5*phi(i,j-1)/6-phi(i,j)/6
+                phihym=  phi(i,j-2)/3.0_WP+5.0_WP*phi(i,j-1)/6.0_WP-phi(i,j)/6.0_WP
             end if
 
-
-            phinew(i,j)=phi(i,j)-dt/d* &
-        &   (phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
+            Hphi1(i,j)=-dt/d*(phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
         enddo
     enddo
-phi=phinew
+phi = phi+Hphi1!+ABcoeff*(Hphi1-Hphi2)
 
+        phi(1,:)=phi(2,:)
+        phi(nx,:)=phi(nx-1,:)
+        phi(:,1)=phi(:,2)
+        phi(:,ny)=phi(:,ny-1)
 
-
-
-
-
-
+        phi(0,:)=phi(1,:)
+        phi(nx+1,:)=phi(nx,:)
+        phi(:,0)=phi(:,1)
+        phi(:,ny+1)=phi(:,ny)    
 
 end subroutine
