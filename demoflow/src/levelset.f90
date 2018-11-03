@@ -23,7 +23,7 @@ subroutine levelsetinit
         ! Outside circle and slot, but inside slot extended
         if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.0.1)) then
             phi(i,j)= -min(sqrt((xm(i)+0.025)**2+(ym(j)-0.1)**2), sqrt((xm(i)-0.025)**2+(ym(j)-0.1)**2))
-        
+
         ! Inside slot
         else if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.0.35)) then
             phi(i,j)=-min(-xm(i)+0.025_WP,xm(i)+0.025_WP,0.35-ym(j))
@@ -47,7 +47,7 @@ subroutine levelsetinit
         ! Inside circle, inside slot extended
         else if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.cy).and.(ym(j).gt.0.35_WP)) then
             phi(i,j) = min(sqrt((xm(i)-cx)**2 + (ym(j)-cy)**2), ym(j)-0.35_WP)
-            
+
         ! Outside Circle and slot extended
         else if ((sqrt(xm(i)**2+(ym(j)-0.25)**2)).gt.0.15) then
             phi(i,j) = -sqrt((xm(i)-cx)**2 + (ym(j)-cy)**2)
@@ -67,29 +67,41 @@ end subroutine
 subroutine levelset_step
     use levelset
 
-    do i=1,nx
-        do j=1,ny
-            
+    do i=2,nx-1
+        do j=2,ny-1
 
-            if (U(i,j).lt.0.0_WP) then
+            Uhp=U(i+1,j)/2+U(i,j)/2
+            Uhm=U(i-1,j)/2+U(i,j)/2
+            Vhp=V(i,j+1)/2+V(i,j)/2
+            Vhm=V(i,j-1)/2+V(i,j)/2
+
+            if (Uhp.lt.0.0_WP) then
                 phihxp= -phi(i,j)/6+5/6*phi(i+1,j)+phi(i+2,j)/3
-                phihxm= -phi(i-1,j)/6+5/6*phi(i,j)+phi(i+1,j)/3
             else
                 phihxp=  phi(i-1,j)/3+5*phi(i,j)/6-phi(i+1,j)/6
+            end if
+
+            if (Uhm.lt.0.0_WP) then
+                phihxm= -phi(i-1,j)/6+5/6*phi(i,j)+phi(i+1,j)/3
+            else
                 phihxm=  phi(i-2,j)/3+5*phi(i-1,j)/6-phi(i,j)/6
             end if
 
-            if (V(i,j).lt.0.0_WP) then
+            if (Vhp.lt.0.0_WP) then
                 phihyp=-phi(i,j)/6+5/6*phi(i,j+1)+phi(i,j+2)/3
-                phihym=-phi(i,j-1)/6+5/6*phi(i,j)+phi(i,j+1)/3
             else
                 phihyp=phi(i,j-1)/3+5*phi(i,j)/6-phi(i,j+1)/6
+            end if
+
+            if (Vhm.lt.0.0_WP) then
+                phihym=-phi(i,j-1)/6+5/6*phi(i,j)+phi(i,j+1)/3
+            else
                 phihym=phi(i,j-2)/3+5*phi(i,j-1)/6-phi(i,j)/6
             end if
 
+
             phinew(i,j)=phi(i,j)-dt/d* &
-      &     ((phi(iphi,j   )*U(iphi,j   )-phi(iphi-1,j     )*U(iphi-1,j     ))+ &
-      &      (phi(i   ,jphi)*V(i   ,jphi)-phi(i     ,jphi-1)*V(i     ,jphi-1)))
+        &   (phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
         enddo
     enddo
 phi=phinew
