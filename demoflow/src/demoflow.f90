@@ -13,7 +13,7 @@ module demoflow
   ! Time integration
   real(WP), parameter :: maxdt=4e-3_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=0.04_WP
+  real(WP), parameter :: viztime=0.1_WP
   ! End of time integration
   real(WP), parameter :: maxtime=30.0_WP
   integer , parameter :: maxstep=10000
@@ -74,6 +74,7 @@ module demoflow
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
   real(WP) :: dtp, timep, rad, thet
   integer, dimension(Np) :: ipc,jpc
+  real(WP), dimension(0:nx+1,0:ny+1) :: phi=0
 
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi

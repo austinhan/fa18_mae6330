@@ -30,6 +30,7 @@ subroutine visualize_init
   call system('mkdir -p viz')
   call system('mkdir -p viz/V')
   call system('mkdir -p viz/P')
+  call system('mkdir -p viz/phi')
   call system('mkdir -p viz/S')
   call system('mkdir -p viz/div')
   if (lpttrack.eq.1) call system('mkdir -p viz/particles')
@@ -137,6 +138,17 @@ subroutine visualize_dump
      rarray=P(1:nx,1:ny)
      write(unit) rarray
      close(unit)
+
+     ! Create levelset data file
+     filename='viz/phi/phi.'//trim(adjustl(buff))
+     open(newunit=unit,file=filename,form='unformatted',access='stream',iostat=ierr,status='replace')
+     cbuffer='phi';     write(unit) cbuffer
+     cbuffer='part';  write(unit) cbuffer
+     ibuffer=1;       write(unit) ibuffer
+     cbuffer='block'; write(unit) cbuffer
+     rarray=phi(1:nx,1:ny)
+     write(unit) rarray
+     close(unit)
      
      ! Create divergence data file
      filename='viz/div/div.'//trim(adjustl(buff))
@@ -160,6 +172,7 @@ subroutine visualize_dump
      cbuffer='VARIABLE';                                 write(unit,'(a80)') cbuffer
      cbuffer='vector per element: 1 V V/V.******';       write(unit,'(a80)') cbuffer
      cbuffer='scalar per element: 1 P P/P.******';       write(unit,'(a80)') cbuffer
+     cbuffer='scalar per element: 1 phi phi/phi.******';       write(unit,'(a80)') cbuffer
      cbuffer='scalar per element: 1 div div/div.******'; write(unit,'(a80)') cbuffer
      if (lpttrack.eq.1) cbuffer='vector per measured node: 1 PartVel particles/velocity.******'; write(unit,'(a80)') cbuffer
      cbuffer='TIME';                                     write(unit,'(a80)') cbuffer

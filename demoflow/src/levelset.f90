@@ -1,7 +1,6 @@
 module levelset
 use demoflow
 implicit none
-real(WP), dimension(0:nx+1,0:ny+1) :: phi=0
 real(WP) :: cx,cy
 
 
@@ -61,6 +60,4 @@ subroutine levelsetinit
         end do
     end do
 write(88,*) phi
-
-
 end subroutine
