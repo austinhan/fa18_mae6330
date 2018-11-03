@@ -5,8 +5,6 @@ real(WP), dimension(0:nx+1,0:ny+1) :: phi=0
 real(WP) :: cx,cy
 
 
-
-
 end module
 
 subroutine levelsetinit
@@ -14,7 +12,6 @@ subroutine levelsetinit
     open(unit=88,file='lvlset.txt',action="write")
     do i=1,nx
         do j=1,ny
-
 
 ! Check negative and positive
 
@@ -49,15 +46,12 @@ subroutine levelsetinit
         ! Inside circle, inside slot extended
         else if ((xm(i).gt.-0.025_WP).and.(xm(i).lt.0.025_WP).and.(ym(j).lt.cy).and.(ym(j).gt.0.35_WP)) then
             phi(i,j) = min(sqrt((xm(i)-cx)**2 + (ym(j)-cy)**2), ym(j)-0.35_WP)
-
             
         ! Outside Circle and slot extended
         else if ((sqrt(xm(i)**2+(ym(j)-0.25)**2)).gt.0.15) then
             phi(i,j) = -sqrt((xm(i)-cx)**2 + (ym(j)-cy)**2)
         end if
 
-
-        !phi=-phi
         ! Edges
         phi(0,:)=phi(1,:)
         phi(nx+1,:)=phi(nx,:)

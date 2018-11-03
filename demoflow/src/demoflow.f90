@@ -72,7 +72,7 @@ module demoflow
   
   ! LPT Stuff
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
-  real(WP) :: dtp, timep
+  real(WP) :: dtp, timep, rad, thet
   integer, dimension(Np) :: ipc,jpc
 
   ! Named constant
@@ -132,10 +132,10 @@ program main
      write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
 
      ! Velocity step
-     call velocity_step
+     !call velocity_step
      
      ! Pressure step
-     call pressure_step
+     !call pressure_step
 
      ! Particle step (change stuff if two-way)
      
@@ -176,18 +176,18 @@ subroutine demoflow_setup
   integer  :: i,j
   
   ! Initialize mesh
-  do i=1,nx+1
+  do i=0,nx+1
      x(i)=real(i-1,WP)*Lx/real(nx,WP)-0.5*Lx
   end do
-  do j=1,ny+1
+  do j=0,ny+1
      y(j)=real(j-1,WP)*Ly/real(ny,WP)-0.5_WP*Ly
   end do
 
   ! Create position of cell centers
-  do i=1,nx
+  do i=0,nx+1
      xm(i)=0.5_WP*(x(i)+x(i+1))
   end do
-  do j=1,ny
+  do j=0,ny+1
      ym(j)=0.5_WP*(y(j)+y(j+1))
   end do
   
@@ -202,13 +202,23 @@ subroutine demoflow_setup
   U=0.0_WP
   V=0.0_WP
   P=0.0_WP
-  
+ do i=0,nx+1
+ 
+  do j=0,ny+1
+    rad=sqrt(xm(i)**2+ym(j)**2)
+    thet=atan2(ym(j),xm(i))
+    U(i,j)=rad**2*pi*sin(thet)
+    V(i,j)=rad**2*pi*cos(thet)
+  enddo
+enddo
+
+
   ! Inflow condition
-  do j=1,ny
-     if (mask(1,j).eq.0) then
-        U(0:1,j)=0.0_WP
-     end if
-  end do
+  !do j=1,ny
+  !   if (mask(1,j).eq.0) then
+  !      U(0:1,j)=0.0_WP
+  !   end if
+  !end do
   
   return
 end subroutine demoflow_setup
