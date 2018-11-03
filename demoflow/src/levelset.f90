@@ -2,7 +2,7 @@ module levelset
 use demoflow
 implicit none
 real(WP) :: cx,cy
-real(WP) :: phih
+real(WP) :: Uhp,Uhm,Vhp,Vhm,phihxp,phihxm,phihyp,phihym
 integer :: iphi,jphi
 real(WP), dimension(0:nx+1,0:ny+1) :: phinew
 
@@ -69,13 +69,38 @@ subroutine levelset_step
 
     do i=1,nx
         do j=1,ny
-            iphi=i
-            if (U(i,j).lt.0.0_WP) iphi=i+1
-            jphi=j
-            if (V(i,j).lt.0.0_WP) jphi=j+1
+            Uhp=U(i+1,j)/2+U(i,j)/2
+            Uhm=U(i-1,j)/2+U(i,j)/2
+            Vhp=V(i,j+1)/2+V(i,j)/2
+            Vhm=V(i,j-1)/2+V(i,j)/2
+
+            if (Uhp.lt.0.0_WP) then
+                phihxp=phi(i+1,j)
+            else
+                phihxp=phi(i,j)
+            end if
+
+            if (Uhm.lt.0.0_WP) then
+                phihxm=phi(i,j)
+            else
+                phihxm=phi(i-1,j)
+            end if
+
+            if (Vhp.lt.0.0_WP) then
+                phihyp=phi(i,j+1)
+            else
+                phihyp=phi(i,j)
+            end if
+
+            if (Vhm.lt.0.0_WP) then
+                phihym=phi(i,j)
+            else
+                phihym=phi(i,j-1)
+            end if
+
+            
             phinew(i,j)=phi(i,j)-dt/d* &
-      &     ((phi(iphi,j   )*U(iphi,j   )-phi(iphi-1,j     )*U(iphi-1,j     ))+ &
-      &      (phi(i   ,jphi)*V(i   ,jphi)-phi(i     ,jphi-1)*V(i     ,jphi-1)))
+        &   (phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
         enddo
     enddo
 phi=phinew
