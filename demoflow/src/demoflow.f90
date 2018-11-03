@@ -11,7 +11,7 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=4e-3_WP
+  real(WP), parameter :: maxdt=1e-3_WP
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.1_WP
   ! End of time integration
@@ -147,6 +147,9 @@ program main
         call lpt_solve
       end do
      end if
+
+     if (lvltrack.eq.1) call levelset_step
+
      ! Dump data for visualization
      call visualize_dump
 
@@ -204,12 +207,14 @@ subroutine demoflow_setup
   V=0.0_WP
   P=0.0_WP
  do i=0,nx+1
- 
   do j=0,ny+1
-    rad=sqrt(xm(i)**2+ym(j)**2)
-    thet=atan2(ym(j),xm(i))
-    U(i,j)=rad**2*pi*sin(thet)
-    V(i,j)=rad**2*pi*cos(thet)
+ U(i,j)=-2*pi*ym(j)
+ V(i,j)=2*pi*xm(i)
+
+    !rad=sqrt(xm(i)**2+ym(j)**2)
+    !thet=atan2(ym(j),xm(i))
+    !U(i,j)=rad**2*pi*cos(thet)
+    !V(i,j)=rad**2*pi*sin(thet)
   enddo
 enddo
 

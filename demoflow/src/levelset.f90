@@ -2,7 +2,9 @@ module levelset
 use demoflow
 implicit none
 real(WP) :: cx,cy
-
+real(WP) :: phih
+integer :: iphi,jphi
+real(WP), dimension(0:nx+1,0:ny+1) :: phinew
 
 end module
 
@@ -56,8 +58,33 @@ subroutine levelsetinit
         phi(nx+1,:)=phi(nx,:)
         phi(:,0)=phi(:,1)
         phi(:,ny+1)=phi(:,ny)
-
+        phinew=phi
         end do
     end do
 write(88,*) phi
+end subroutine
+
+subroutine levelset_step
+    use levelset
+
+    do i=1,nx
+        do j=1,ny
+            iphi=i
+            if (U(i,j).lt.0.0_WP) iphi=i+1
+            jphi=j
+            if (V(i,j).lt.0.0_WP) jphi=j+1
+            phinew(i,j)=phi(i,j)-dt/d* &
+      &     ((phi(iphi,j   )*U(iphi,j   )-phi(iphi-1,j     )*U(iphi-1,j     ))+ &
+      &      (phi(i   ,jphi)*V(i   ,jphi)-phi(i     ,jphi-1)*V(i     ,jphi-1)))
+        enddo
+    enddo
+phi=phinew
+
+
+
+
+
+
+
+
 end subroutine
