@@ -101,11 +101,17 @@ subroutine levelset_step
             
             phinew(i,j)=phi(i,j)-dt/d* &
         &   (phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
+
+        if ((i.eq.1).and.(j.eq.3)) print *, dt/d*(phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
         enddo
     enddo
 phi=phinew
 
-
+phi(0,:)=phi(1,:)
+        phi(nx+1,:)=phi(nx,:)
+        phi(:,0)=phi(:,1)
+        phi(:,ny+1)=phi(:,ny)
+        phinew=phi
 
 
 
