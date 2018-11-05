@@ -84,42 +84,53 @@ subroutine levelset_step
             Vhm=V(i,j-1)/2.0_WP+V(i,j)/2.0_WP
 
             if (Uhp.lt.0.0_WP) then
-                phihxp= -phi(i,j)/6.0_WP+5.0_WP*phi(i+1,j)/6.0_WP+phi(i+2,j)/3.0_WP
+                phihxp=   phi(i,j)/3.0_WP+5.0_WP*phi(i+1,j)/6.0_WP-phi(i+2,j)/6.0_WP
             else
-                phihxp=  phi(i-1,j)/3.0_WP+5.0_WP*phi(i,j)/6.0_WP-phi(i+1,j)/6.0_WP
+                phihxp=  -phi(i-1,j)/6.0_WP+5.0_WP*phi(i,j)/6.0_WP+2.0_WP*phi(i+1,j)/6.0_WP
             end if
 
             if (Uhm.lt.0.0_WP) then
-                phihxm= -phi(i-1,j)/6.0_WP+5.0_WP*phi(i,j)/6.0_WP+phi(i+1,j)/3.0_WP
+                phihxm=  phi(i-1,j)/3.0_WP+5.0_WP*phi(i,j)/6.0_WP-phi(i+1,j)/6.0_WP
             else
-                phihxm=  phi(i-2,j)/3.0_WP+5.0_WP*phi(i-1,j)/6.0_WP-phi(i,j)/6.0_WP
+                phihxm= -phi(i-2,j)/6.0_WP+5.0_WP*phi(i-1,j)/6.0_WP+phi(i,j)/3.0_WP
             end if
 
             if (Vhp.lt.0.0_WP) then
-                phihyp= -phi(i,j)/6.0_WP+5.0_WP*phi(i,j+1)/6.0_WP+phi(i,j+2)/3.0_WP
+                phihyp=  phi(i,j)/3.0_WP+5.0_WP*phi(i,j+1)/6.0_WP-phi(i,j+2)/6.0_WP
             else
-                phihyp=  phi(i,j-1)/3.0_WP+5.0_WP*phi(i,j)/6.0_WP-phi(i,j+1)/6.0_WP
+                phihyp= -phi(i,j-1)/6.0_WP+5.0_WP*phi(i,j)/6.0_WP+phi(i,j+1)/3.0_WP
             end if
 
             if (Vhm.lt.0.0_WP) then
-                phihym= -phi(i,j-1)/6.0_WP+5.0_WP*phi(i,j)/6.0_WP+phi(i,j+1)/3.0_WP
+                phihym=  phi(i,j-1)/3.0_WP+5.0_WP*phi(i,j)/6.0_WP-phi(i,j+1)/6.0_WP
             else
-                phihym=  phi(i,j-2)/3.0_WP+5.0_WP*phi(i,j-1)/6.0_WP-phi(i,j)/6.0_WP
+                phihym= -phi(i,j-2)/6.0_WP+5.0_WP*phi(i,j-1)/6.0_WP+phi(i,j)/3.0_WP
             end if
 
-            Hphi1(i,j)=-dt/d*(phihxp*Uhp-phihxm*Uhm+phihyp*Vhp-phihym*Vhm)
+            Hphi1(i,j)=-dt/d*(phihxp*U(i,j)-phihxm*U(i,j)+phihyp*V(i,j)-phihym*V(i,j))
         enddo
     enddo
-phi = phi+Hphi1!+ABcoeff*(Hphi1-Hphi2)
-
-        phi(1,:)=phi(2,:)
-        phi(nx,:)=phi(nx-1,:)
-        phi(:,1)=phi(:,2)
-        phi(:,ny)=phi(:,ny-1)
+        !phi(1,:)=phi(2,:)
+        !phi(nx,:)=phi(nx-1,:)
+        !phi(:,1)=phi(:,2)
+        !phi(:,ny)=phi(:,ny-1)
 
         phi(0,:)=phi(1,:)
         phi(nx+1,:)=phi(nx,:)
         phi(:,0)=phi(:,1)
-        phi(:,ny+1)=phi(:,ny)    
+        phi(:,ny+1)=phi(:,ny)   
+
+
+phi = phi+Hphi1!+ABcoeff*(Hphi1-Hphi2)
+
+        !phi(1,:)=phi(2,:)
+        !phi(nx,:)=phi(nx-1,:)
+        !phi(:,1)=phi(:,2)
+        !phi(:,ny)=phi(:,ny-1)
+
+        !phi(0,:)=phi(1,:)
+        !phi(nx+1,:)=phi(nx,:)
+        !phi(:,0)=phi(:,1)
+        !phi(:,ny+1)=phi(:,ny)    
 
 end subroutine
