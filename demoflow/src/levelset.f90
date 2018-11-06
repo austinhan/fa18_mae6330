@@ -1,10 +1,10 @@
 module levelset
-use demoflow
-implicit none
-real(WP) :: cx,cy
-real(WP) :: phihxp,phihyp,phihxm,phihym,Vhp,Vhm,Uhp,Uhm
-integer :: iphi,jphi
-real(WP), dimension(0:nx+1,0:ny+1) :: Hphi1,Hphi2
+    use demoflow
+    implicit none
+    real(WP) :: cx,cy
+    real(WP) :: phihxp,phihyp,phihxm,phihym,Vhp,Vhm,Uhp,Uhm
+    integer :: iphi,jphi
+    real(WP), dimension(0:nx+1,0:ny+1) :: Hphi1,Hphi2
 
 end module
 
