@@ -11,12 +11,12 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=1e-3_WP
+  real(WP), parameter :: maxdt=1e-4_WP
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.125_WP
   ! End of time integration
   real(WP), parameter :: maxtime=30.0_WP
-  integer , parameter :: maxstep=10000
+  integer , parameter :: maxstep=10001
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
   real(WP), parameter :: abscvg=1.0e-4_WP
@@ -383,12 +383,12 @@ subroutine demoflow_init
   HV1=0.0_WP; HV2=0.0_WP
   
   ! Clean up initial conditions
-  do j=1,ny
-     do i=1,nx
-        if (maxval(mask(i-1:i,j)).eq.1) U(i,j)=0.0_WP
-        if (maxval(mask(i,j-1:j)).eq.1) V(i,j)=0.0_WP
-     end do
-  end do
+!  do j=1,ny
+!     do i=1,nx
+!        if (maxval(mask(i-1:i,j)).eq.1) U(i,j)=0.0_WP
+!        if (maxval(mask(i,j-1:j)).eq.1) V(i,j)=0.0_WP
+!     end do
+!  end do
   
   return
 end subroutine demoflow_init
