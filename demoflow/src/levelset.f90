@@ -106,10 +106,9 @@ subroutine levelset_step
         enddo
     enddo
 
-    
         diffH=Hphi1+Hphi2
 
-phi = phi+Hphi1!ABcoeff*diffH
+phi = phi+ABcoeff*diffH
 
         phi(1,:)=phi(2,:)
         phi(nx,:)=phi(nx-1,:)
