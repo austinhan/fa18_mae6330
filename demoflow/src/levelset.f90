@@ -113,7 +113,7 @@ subroutine levelset_step
 
 phi = phi+ABcoeff*diffH
 
-        if (reinitcount.eq.10) call levelset_reinit
+        !if (reinitcount.eq.10) call levelset_reinit
 
         phi(1,:)=phi(2,:)
         phi(nx,:)=phi(nx-1,:)
@@ -133,10 +133,10 @@ subroutine levelset_reinit
     real(WP) ::dtau, G, dphidx_m,dphidx_p,dphidy_m,dphidy_p
     real(WP), dimension(0:nx+1,0:ny+1) :: Se,phi0
 
-    dtau=d/10.0_WP
+    dtau=d/30.0_WP
     phi0=phi
     Se=phi/sqrt(phi**2+d**2)
-    do l=1,3
+    do l=1,10
         do i=1,nx
             do j=1,ny
 
@@ -153,9 +153,6 @@ subroutine levelset_reinit
               dphidy_m=sum(weno3_ym(-2:+1)*phi(i,j-2:j+1))
 
               dphidy_p=sum(weno3_yp(-1:+2)*phi(i,j-1:j+2))
-
-                
-                !call sleep(1)
 
               if (phi0(i,j).gt.0) then
                 G=sqrt(max(max(dphidx_m,0.0_WP)**2,min(dphidx_p,0.0_WP)**2) &
