@@ -74,6 +74,7 @@ module demoflow
   real(WP), dimension(Np) :: xp,yp,up,vp,mp
   real(WP) :: dtp, timep, rad, thet
   integer, dimension(Np) :: ipc,jpc
+  integer :: reinitcount
   real(WP), dimension(0:nx+1,0:ny+1) :: phi=0
 
   ! Named constant
@@ -119,6 +120,7 @@ program main
   ! Initialize visualization
   call visualize_init
   
+  reinitcount=0
   ! Main time loop
   timeloop: do while (time.lt.maxtime .and. ntime.lt.maxstep)
      
@@ -149,7 +151,8 @@ program main
      end if
 
      if (lvltrack.eq.1) call levelset_step
-
+     reinitcount=reinitcount+1
+     if (reinitcount.eq.11) reinitcount=1
      ! Dump data for visualization
      call visualize_dump
 

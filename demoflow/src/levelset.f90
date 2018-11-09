@@ -113,6 +113,8 @@ subroutine levelset_step
 
 phi = phi+ABcoeff*diffH
 
+        if (reinitcount.eq.10) call levelset_reinit
+
         phi(1,:)=phi(2,:)
         phi(nx,:)=phi(nx-1,:)
         phi(:,1)=phi(:,2)
@@ -133,10 +135,10 @@ subroutine levelset_reinit
 
     dtau=d/10.0_WP
     phi0=phi
-    Se=phi/sqrt(phi+d)
-    do l=1,5
-        do i=2,nx-1
-            do j=2,ny-1
+    Se=phi/sqrt(phi**2+d**2)
+    do l=1,3
+        do i=1,nx
+            do j=1,ny
 
               ! Calculate WENO3 coefficients
 
@@ -152,6 +154,9 @@ subroutine levelset_reinit
 
               dphidy_p=sum(weno3_yp(-1:+2)*phi(i,j-1:j+2))
 
+                
+                !call sleep(1)
+
               if (phi0(i,j).gt.0) then
                 G=sqrt(max(max(dphidx_m,0.0_WP)**2,min(dphidx_p,0.0_WP)**2) &
                 &     +max(max(dphidy_m,0.0_WP)**2,min(dphidy_p,0.0_WP)**2))-1.0_WP
@@ -162,6 +167,8 @@ subroutine levelset_reinit
                 G=0.0_WP
             
             end if
+
+            !print *,dphidx_m,G
 
             phi(i,j)=phi(i,j)-Se(i,j)*G*dtau
 
