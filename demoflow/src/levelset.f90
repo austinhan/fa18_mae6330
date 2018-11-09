@@ -106,7 +106,7 @@ subroutine levelset_step
         enddo
     enddo
 
-        diffH=Hphi1+Hphi2
+        diffH=3.0_WP*Hphi1-Hphi2
 
 phi = phi+ABcoeff*diffH
 
