@@ -13,9 +13,9 @@ module demoflow
   ! Time integration
   real(WP), parameter :: maxdt=1e-3_WP
   real(WP), parameter :: maxCFL=0.5_WP
-  real(WP), parameter :: viztime=0.125_WP
+  real(WP), parameter :: viztime=0.1_WP
   ! End of time integration
-  real(WP), parameter :: maxtime=30.0_WP
+  real(WP), parameter :: maxtime=1.0_WP
   integer , parameter :: maxstep=10000
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
@@ -25,22 +25,17 @@ module demoflow
   integer,  parameter :: nx=100
   integer,  parameter :: ny=100
   ! Domain size
-  real(WP), parameter :: Lx=1_WP
-  real(WP), parameter :: Ly=1_WP
-  ! Fluid Density
-  real(WP), parameter :: rho=1.0_WP
-  ! Dynamic Viscosity
-  real(WP), parameter :: mu=0.0005_WP
+  real(WP), parameter :: Lx=1.0_WP
+  real(WP), parameter :: Ly=1.0_WP
   ! Kinematic viscosity
-  real(WP), parameter :: knu=mu/rho
+  real(WP), parameter :: knu=0.01_WP
   ! Gravity
-  real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,-0.1_WP/)
-  ! Include Lagrange Particle Tracking (1=yes)
-  integer, parameter :: lpttrack=0
-  integer, parameter :: Np=1
-  ! Include Levelset (1=yes)
-  integer, parameter :: lvltrack=1
-  
+  real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
+  ! Do we use levelset
+  logical , parameter :: use_levelset=.true.
+  real(WP), dimension(1:nx,1:ny) :: jcx, jcy
+  real(WP), dimension(-1:nx+2,-1:ny+2) :: curv
+  real(WP), parameter :: sigma=1.0_WP
   ! ==========================================
   
   ! Mesh
@@ -61,8 +56,7 @@ module demoflow
   
   ! Time info
   real(WP) :: time,CFL,dt,dt_old
-  integer  :: ntime,pit,liter
-  
+  integer  :: ntime,pit
   
   ! Discretization coefficients
   real(WP), dimension(1:nx,1:ny,1:2,-1:+1) :: plap   ! Pressure Laplacian
@@ -70,12 +64,6 @@ module demoflow
   real(WP), dimension(1:nx,2:ny,1:2,-1:+1) :: vlap   ! V velocity Laplacian
   real(WP) :: ABcoeff                                ! Adams-Bashforth coefficient
   
-  ! LPT Stuff
-  real(WP), dimension(Np) :: xp,yp,up,vp,mp
-  real(WP) :: dtp, timep, rad, thet
-  integer, dimension(Np) :: ipc,jpc
-  real(WP), dimension(0:nx+1,0:ny+1) :: phi=0
-
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
   
@@ -99,23 +87,15 @@ program main
   
   ! Initialize various aspects of the code
   call demoflow_init
+
+  ! Initialize levelset method
+  if (use_levelset) call levelset_init
   
   ! Initialize time
   time=0.0_WP
   dt=maxdt
   ntime=0
-
-  ! Initialize particle tracking
-  if (lpttrack.eq.1) then
-     open(unit=88,file='part.txt',action="write")
-     !call lpt_init
-  end if
-
-  ! Initialize levelset
-  if (lvltrack.eq.1) then
-    call levelsetinit
-  end if
-
+  
   ! Initialize visualization
   call visualize_init
   
@@ -131,42 +111,24 @@ program main
      ! Some output to the screen
      if (ntime.eq.1) write(*,'(a12,a2,6a12)') 'Step','  ','Time  ','CFLmax','Umax  ','Vmax  ','Divergence','Piterations'
      write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
-
+     
+     ! Levelset
+     if (use_levelset) call levelset_step
+     
      ! Velocity step
-     !call velocity_step
+     call velocity_step
      
      ! Pressure step
-     !call pressure_step
-
-     ! Particle step (change stuff if two-way)
+      call pressure_step
      
-     if (lpttrack.eq.1) then
-      write(88,*) xp(1),yp(1),up(1),vp(1),timep
-      timep=timep+dtp
-      do j=1,1
-        call lpt_solve
-      end do
-     end if
-
-     if (lvltrack.eq.1) call levelset_step
-
      ! Dump data for visualization
      call visualize_dump
-
+     
   end do timeloop
-
-  if (lpttrack.eq.1) close(88)
-
+  
   ! Get final time
   call cpu_time(walltime)
   print*,'Time taken: ',walltime-walltime_ref
-  
-  ! Output velocity profile
-  write(60,*) y(2),0.0_WP
-  do j=2,ny-1
-     write(60,*) ym(j),U(nx,j)
-  end do
-  write(60,*) y(ny),0.0_WP
   
 end program main
 
@@ -180,51 +142,34 @@ subroutine demoflow_setup
   integer  :: i,j
   
   ! Initialize mesh
-  do i=0,nx+1
-     x(i)=real(i-1,WP)*Lx/real(nx,WP)-0.5*Lx
+  do i=1,nx+1
+     x(i)=real(i-1,WP)*Lx/real(nx,WP)-0.5_WP*Lx
   end do
-  do j=0,ny+1
+  do j=1,ny+1
      y(j)=real(j-1,WP)*Ly/real(ny,WP)-0.5_WP*Ly
   end do
 
   ! Create position of cell centers
-  do i=0,nx+1
+  do i=1,nx
      xm(i)=0.5_WP*(x(i)+x(i+1))
   end do
-  do j=0,ny+1
+  do j=1,ny
      ym(j)=0.5_WP*(y(j)+y(j+1))
   end do
   
   ! Mask out walls
   mask=0
-  mask(:,1 )=1
-  !mask(:,ny)=1
-  mask(1,: )=1
-  mask(nx,:)=1
   
-  ! Initial conditions
+  ! Initial conditions - solid body rotation
+  do j=0,ny+1
+     do i=0,nx+1
+        U(i,j)=-2.0_WP*Pi*ym(j)
+        V(i,j)=+2.0_WP*Pi*xm(i)
+     end do
+  end do
   U=0.0_WP
   V=0.0_WP
   P=0.0_WP
- do i=0,nx+1
-  do j=0,ny+1
- U(i,j)=-2*pi*ym(j)
- V(i,j)=2*pi*xm(i)
-
-    !rad=sqrt(xm(i)**2+ym(j)**2)
-    !thet=atan2(ym(j),xm(i))
-    !U(i,j)=rad**2*pi*cos(thet)
-    !V(i,j)=rad**2*pi*sin(thet)
-  enddo
-enddo
-
-
-  ! Inflow condition
-  !do j=1,ny
-  !   if (mask(1,j).eq.0) then
-  !      U(0:1,j)=0.0_WP
-  !   end if
-  !end do
   
   return
 end subroutine demoflow_setup
@@ -526,6 +471,8 @@ subroutine pressure_step
      end do
   end do
 
+  call levelset_jump
+
   ! Solve the pressure Poisson equation
   call pressure_solve
   
@@ -533,7 +480,7 @@ subroutine pressure_step
   do j=1,ny
      do i=2,nx
         if (maxval(mask(i-1:i,j)).eq.0) then
-           U(i,j)=U(i,j)-dt*(P(i,j)-P(i-1,j))/d
+           U(i,j)=U(i,j)-dt*(P(i,j)-P(i-1,j)+jcx(i,j))/d
         end if
      end do
   end do
@@ -542,7 +489,7 @@ subroutine pressure_step
   do j=2,ny
      do i=1,nx
         if (maxval(mask(i,j-1:j)).eq.0) then
-           V(i,j)=V(i,j)-dt*(P(i,j)-P(i,j-1))/d
+           V(i,j)=V(i,j)-dt*(P(i,j)-P(i,j-1)+jcy(i,j))/d
         end if
      end do
   end do
