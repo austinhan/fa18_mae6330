@@ -37,6 +37,7 @@ subroutine visualize_init
      call system('mkdir -p viz/G')
      call system('mkdir -p viz/norm')
      call system('mkdir -p viz/curv')
+     call system('mkdir -p viz/jcx')
   end if
   
   ! Output problem geometry
@@ -169,6 +170,7 @@ subroutine visualize_dump
         cbuffer='scalar per element: 1 G G/G.******'; write(unit,'(a80)') cbuffer
         cbuffer='vector per element: 1 norm norm/norm.******'; write(unit,'(a80)') cbuffer
         cbuffer='scalar per element: 1 curv curv/curv.******'; write(unit,'(a80)') cbuffer
+        cbuffer='scalar per element: 1 jcx jcx/jcx.******'; write(unit,'(a80)') cbuffer
      end if
      cbuffer='TIME';                                     write(unit,'(a80)') cbuffer
      cbuffer='time set: 1';                              write(unit,'(a80)') cbuffer
@@ -200,6 +202,17 @@ subroutine visualize_dump
         ibuffer=1;       write(unit) ibuffer
         cbuffer='block'; write(unit) cbuffer
         rarray=curv(1:nx,1:ny)
+        write(unit) rarray
+        close(unit)
+
+        ! Level set
+        filename='viz/jcx/jcx.'//trim(adjustl(buff))
+        open(newunit=unit,file=filename,form='unformatted',access='stream',iostat=ierr,status='replace')
+        cbuffer='jcx';  write(unit) cbuffer
+        cbuffer='part';  write(unit) cbuffer
+        ibuffer=1;       write(unit) ibuffer
+        cbuffer='block'; write(unit) cbuffer
+        rarray=jcx(1:nx,1:ny)
         write(unit) rarray
         close(unit)
         

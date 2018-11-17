@@ -36,6 +36,9 @@ module demoflow
   real(WP), dimension(1:nx,1:ny) :: jcx, jcy
   real(WP), dimension(-1:nx+2,-1:ny+2) :: curv
   real(WP), parameter :: sigma=1.0_WP
+    ! Levelset field
+  real(WP), dimension(-1:nx+2,-1:ny+2) :: G
+  real(WP) :: add
   ! ==========================================
   
   ! Mesh
@@ -475,12 +478,21 @@ subroutine pressure_step
 
   ! Solve the pressure Poisson equation
   call pressure_solve
+  open (unit = 7, file = "jcx.txt")
+ write (7,*)  P
+ close(7)
+ !call sleep(1)
   
   ! Correct U velocity
   do j=1,ny
      do i=2,nx
         if (maxval(mask(i-1:i,j)).eq.0) then
-           U(i,j)=U(i,j)-dt*(P(i,j)-P(i-1,j)+jcx(i,j))/d
+           U(i,j)=U(i,j)-dt*(P(i,j)-P(i-1,j))/d
+           if (G(i-1,j  )*G(i,j).lt.0) then
+            add=sigma*curv(i,j)
+            if (G(i-1,j).gt.G(i,j)) add=-add
+            U(i,j)=U(i,j)+dt*add/d
+           end if
         end if
      end do
   end do
@@ -489,7 +501,12 @@ subroutine pressure_step
   do j=2,ny
      do i=1,nx
         if (maxval(mask(i,j-1:j)).eq.0) then
-           V(i,j)=V(i,j)-dt*(P(i,j)-P(i,j-1)+jcy(i,j))/d
+           V(i,j)=V(i,j)-dt*(P(i,j)-P(i,j-1))/d
+           if (G(i,j-1)*G(i,j).lt.0) then
+            add=sigma*curv(i,j)
+            if (G(i,j-1).gt.G(i,j)) add=-add
+            V(i,j)=V(i,j)+dt*add/d
+           end if
         end if
      end do
   end do

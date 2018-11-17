@@ -2,8 +2,7 @@ module levelset
   use demoflow
   implicit none
   
-  ! Levelset field
-  real(WP), dimension(-1:nx+2,-1:ny+2) :: G
+
    
   ! Normal vector
   real(WP), dimension(-1:nx+2,-1:ny+2) :: normx
@@ -327,6 +326,7 @@ subroutine levelset_curvature
            Gxy=((G(i+1,j+1)-G(i+1,j-1))/(2.0_WP*d)-(G(i-1,j+1)-G(i-1,j-1))/(2.0_WP*d))/(2.0_WP*d)
            curv(i,j)=-(+Gx**2*Gyy-2.0_WP*Gx*Gy*Gxy+Gy**2*Gxx)/((Gx**2+Gy**2)**(1.5_WP)+epsilon(1.0_WP))
         end if
+        curv(i,j)=1.0_WP/0.15_WP
      end do
   end do
   
@@ -339,8 +339,6 @@ subroutine levelset_curvature
      curv(i,-1:0)=curv(i,1)
      curv(i,ny+1:ny+2)=curv(i,ny)
   end do
-  
-  curv(i,j)=1.0_WP/0.15_WP
 
   return
 end subroutine levelset_curvature
@@ -363,7 +361,7 @@ subroutine levelset_jump
  
        if (G(i+1,j  )*G(i,j).lt.0) then 
           jcx(i,j)=sigma*curv(i,j)
-          if (G(i+1,j).gt.G(i,j)) jcx(i,j)=-jcx(i,j)
+          if (G(i+1,j).lt.G(i,j)) jcx(i,j)=-jcx(i,j)
        end if
  
        if (G(i-1,j  )*G(i,j).lt.0) then 
@@ -373,7 +371,7 @@ subroutine levelset_jump
  
        if (G(i  ,j+1)*G(i,j).lt.0) then 
           jcy(i,j)=sigma*curv(i,j)
-          if (G(i,j+1).gt.G(i,j)) jcy(i,j)=-jcy(i,j)
+          if (G(i,j+1).lt.G(i,j)) jcy(i,j)=-jcy(i,j)
        end if
  
        if (G(i  ,j-1)*G(i,j).lt.0) then 
@@ -384,5 +382,7 @@ subroutine levelset_jump
        div(i,j) = div(i,j)+(jcx(i,j)+jcy(i,j))*dt/d**2
     end do
  end do
- 
+
+
+
    end subroutine levelset_jump
