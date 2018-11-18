@@ -360,7 +360,7 @@ subroutine levelset_jump
        &   (mask(i  ,j+1).eq.1)) cycle
  
        if (G(i+1,j  )*G(i,j).lt.0) then 
-          
+          icurv=
           print *, icurv
           !icurv=1.0_WP/.15_WP
           jcx(i,j)=sigma*icurv
