@@ -11,7 +11,7 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=5e-4_WP
+  real(WP), parameter :: maxdt=1e-4_WP
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.1_WP
   ! End of time integration

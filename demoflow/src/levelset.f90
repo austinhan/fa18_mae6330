@@ -37,10 +37,10 @@ subroutine levelset_init
   ! Loop over full field and create initial distance - Zalesak
   do j=1,ny
      do i=1,nx
-        G(i,j)=-sqrt(xm(i)**2+ym(j)**2)+0.15
+        !G(i,j)=-sqrt(xm(i)**2+ym(j)**2)+0.15
         !if ((xm(i)**2+ym(j)**2).lt.0.15) G(i,j)=-G(i,j)
         !G(i,j)=init_zalesak((/xm(i),ym(j),0.0_WP/),(/0.0_WP,0.25_WP,0.0_WP/),0.15_WP,0.05_WP,0.25_WP)
-        !G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.25_WP,0.05_WP)
+        G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.25_WP,0.05_WP)
      end do
   end do
   
