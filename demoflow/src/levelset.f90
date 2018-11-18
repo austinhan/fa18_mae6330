@@ -37,10 +37,10 @@ subroutine levelset_init
   ! Loop over full field and create initial distance - Zalesak
   do j=1,ny
      do i=1,nx
-        !G(i,j)=-sqrt(xm(i)**2+ym(j)**2)+0.15
+        G(i,j)=-sqrt(xm(i)**2+ym(j)**2)+0.15
         !if ((xm(i)**2+ym(j)**2).lt.0.15) G(i,j)=-G(i,j)
         !G(i,j)=init_zalesak((/xm(i),ym(j),0.0_WP/),(/0.0_WP,0.25_WP,0.0_WP/),0.15_WP,0.05_WP,0.25_WP)
-        G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.25_WP,0.05_WP)
+        !G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.25_WP,0.05_WP)
      end do
   end do
   
@@ -371,29 +371,29 @@ subroutine levelset_jump
        &   (mask(i  ,j+1).eq.1)) cycle
  
        if (G(i+1,j  )*G(i,j).lt.0) then 
-          icurv=
-          print *, icurv
+          icurv=curv(i,j)*(1+G(i,j)/(G(i+1,j)-G(i,j)))+curv(i+1,j)*(-G(i,j)/(G(i+1,j)-G(i,j)))
           !icurv=1.0_WP/.15_WP
           jcx(i,j)=sigma*icurv
           if (G(i+1,j).lt.G(i,j)) jcx(i,j)=-jcx(i,j)
        end if
  
        if (G(i-1,j  )*G(i,j).lt.0) then 
-          icurv=(curv(i,j)*G(i-1,j)/(G(i,j)+G(i-1,j)))+(1-G(i-1,j)/(G(i,j)+G(i-1,j)))*curv(i-1,j)
+         icurv=curv(i-1,j)*(1+G(i-1,j)/(G(i,j)-G(i-1,j)))+curv(i,j)*(-G(i-1,j)/(G(i,j)-G(i-1,j)))
+
           !icurv=1.0_WP/.15_WP
           jcx(i,j)=sigma*icurv
           if (G(i-1,j).lt.G(i,j)) jcx(i,j)=-jcx(i,j)
        end if
  
        if (G(i  ,j+1)*G(i,j).lt.0) then 
-          icurv=(curv(i,j)*G(i,j+1)/(G(i,j)+G(i,j+1)))+(1-G(i,j+1)/(G(i,j)+G(i,j+1)))*curv(i,j+1)
+         icurv=curv(i,j)*(1+G(i,j)/(G(i,j+1)-G(i,j)))+curv(i,j+1)*(-G(i,j)/(G(i,j+1)-G(i,j)))
           !icurv=1.0_WP/.15_WP
           jcy(i,j)=sigma*icurv
           if (G(i,j+1).lt.G(i,j)) jcy(i,j)=-jcy(i,j)
        end if
  
        if (G(i  ,j-1)*G(i,j).lt.0) then 
-          icurv=(curv(i,j)*G(i,j-1)/(G(i,j)+G(i,j-1)))+(1-G(i,j-1)/(G(i,j)+G(i,j-1)))*curv(i,j-1)
+         icurv=curv(i,j-1)*(1+G(i,j-1)/(G(i,j)-G(i,j-1)))+curv(i,j)*(-G(i,j-1)/(G(i,j)-G(i,j-1)))
           !icurv=1.0_WP/.15_WP
           jcy(i,j)=sigma*icurv
           if (G(i,j-1).lt.G(i,j)) jcy(i,j)=-jcy(i,j)
