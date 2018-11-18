@@ -38,7 +38,7 @@ module demoflow
   real(WP), parameter :: sigma=1.0_WP
     ! Levelset field
   real(WP), dimension(-1:nx+2,-1:ny+2) :: G
-  real(WP) :: add
+  real(WP) :: add, icurv
   ! ==========================================
   
   ! Mesh
@@ -489,7 +489,9 @@ subroutine pressure_step
         if (maxval(mask(i-1:i,j)).eq.0) then
            U(i,j)=U(i,j)-dt*(P(i,j)-P(i-1,j))/d
            if (G(i-1,j  )*G(i,j).lt.0) then
-            add=sigma*curv(i,j)
+            icurv=(curv(i,j)*G(i-1,j)/(G(i,j)+G(i-1,j)))+(1-G(i-1,j)/(G(i,j)+G(i-1,j)))*curv(i-1,j)
+            !icurv=1.0_WP/0.15_WP
+            add=sigma*icurv
             if (G(i-1,j).gt.G(i,j)) add=-add
             U(i,j)=U(i,j)+dt*add/d
            end if
@@ -503,7 +505,9 @@ subroutine pressure_step
         if (maxval(mask(i,j-1:j)).eq.0) then
            V(i,j)=V(i,j)-dt*(P(i,j)-P(i,j-1))/d
            if (G(i,j-1)*G(i,j).lt.0) then
-            add=sigma*curv(i,j)
+            icurv=(curv(i,j)*G(i,j-1)/(G(i,j)+G(i,j-1)))+(1-G(i,j-1)/(G(i,j)+G(i,j-1)))*curv(i,j-1)
+            !icurv=1.0_WP/.15_WP
+            add=sigma*icurv
             if (G(i,j-1).gt.G(i,j)) add=-add
             V(i,j)=V(i,j)+dt*add/d
            end if
