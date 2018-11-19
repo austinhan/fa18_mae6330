@@ -28,7 +28,7 @@ module demoflow
   real(WP), parameter :: Lx=1.0_WP
   real(WP), parameter :: Ly=1.0_WP
   ! Kinematic viscosity
-  real(WP), parameter :: knu=0.01_WP
+  real(WP), parameter :: knu=0.0001_WP
   ! Gravity
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
   ! Do we use levelset
@@ -38,7 +38,7 @@ module demoflow
   real(WP), parameter :: sigma=1.0_WP
     ! Levelset field
   real(WP), dimension(-1:nx+2,-1:ny+2) :: G
-  real(WP) :: add, icurv
+  real(WP) :: add, icurv, rhoij, nrhoij, rhog, rhol, rhori,rhole,rhoab,rhobe, thet
   ! ==========================================
   
   ! Mesh
@@ -79,7 +79,6 @@ end module demoflow
 program main
   use demoflow
   implicit none
-  integer  :: j
   real(WP) :: walltime_ref,walltime
   
   ! Initialize timer
@@ -217,52 +216,7 @@ subroutine demoflow_init
   x(0)=x(1)-d; x(nx+2)=x(nx+1)+d; xm(0)=xm(1)-d; xm(nx+1)=xm(nx)+d
   y(0)=y(1)-d; y(ny+2)=y(ny+1)+d; ym(0)=ym(1)-d; ym(ny+1)=ym(ny)+d
   
-  ! Create pressure Laplacian operator - normal cells
-  plap(:,:,1,-1)=+1.0_WP/d**2
-  plap(:,:,1, 0)=-2.0_WP/d**2
-  plap(:,:,1,+1)=+1.0_WP/d**2
-  plap(:,:,2,-1)=+1.0_WP/d**2
-  plap(:,:,2, 0)=-2.0_WP/d**2
-  plap(:,:,2,+1)=+1.0_WP/d**2
-  
-  ! Neumann conditions if non-periodic
-  plap(1,:,1, 0)=plap(1,:,1,0)+plap(1,:,1,-1)
-  plap(1,:,1,-1)=0.0_WP
-  plap(nx,:,1, 0)=plap(nx,:,1,0)+plap(nx,:,1,+1)
-  plap(nx,:,1,+1)=0.0_WP
-  plap(:,1,2, 0)=plap(:,1,2,0)+plap(:,1,2,-1)
-  plap(:,1,2,-1)=0.0_WP
-  plap(:,ny,2, 0)=plap(:,ny,2,0)+plap(:,ny,2,+1)
-  plap(:,ny,2,+1)=0.0_WP
-  
-  ! Handle walls in the domain
-  do j=1,ny
-     do i=1,nx
-        ! If wall cell, change Laplacian to identity
-        if (mask(i,j).eq.1) then
-           plap(i,j,:,:)=0.0_WP
-           plap(i,j,1,0)=1.0_WP
-        else
-           ! If neighbor to wall cell, use Neumann
-           if (mask(i+1,j).eq.1) then
-              plap(i,j,1, 0)=plap(i,j,1,0)+plap(i,j,1,+1)
-              plap(i,j,1,+1)=0.0_WP
-           end if
-           if (mask(i-1,j).eq.1) then
-              plap(i,j,1, 0)=plap(i,j,1,0)+plap(i,j,1,-1)
-              plap(i,j,1,-1)=0.0_WP
-           end if
-           if (mask(i,j+1).eq.1) then
-              plap(i,j,2, 0)=plap(i,j,2,0)+plap(i,j,2,+1)
-              plap(i,j,2,+1)=0.0_WP
-           end if
-           if (mask(i,j-1).eq.1) then
-              plap(i,j,2, 0)=plap(i,j,2,0)+plap(i,j,2,-1)
-              plap(i,j,2,-1)=0.0_WP
-           end if
-        end if
-     end do
-  end do
+
   
   ! Create U Laplacian for viscous term
   ulap(:,:,1,-1)=+1.0_WP/d**2
@@ -474,13 +428,53 @@ subroutine pressure_step
      end do
   end do
 
+  ! Pressure laplcian created in here
+ 
   call levelset_jump
+
+  
+  ! Neumann conditions if non-periodic
+  plap(1,:,1, 0)=plap(1,:,1,0)+plap(1,:,1,-1)
+  plap(1,:,1,-1)=0.0_WP
+  plap(nx,:,1, 0)=plap(nx,:,1,0)+plap(nx,:,1,+1)
+  plap(nx,:,1,+1)=0.0_WP
+  plap(:,1,2, 0)=plap(:,1,2,0)+plap(:,1,2,-1)
+  plap(:,1,2,-1)=0.0_WP
+  plap(:,ny,2, 0)=plap(:,ny,2,0)+plap(:,ny,2,+1)
+  plap(:,ny,2,+1)=0.0_WP
+  
+  ! Handle walls in the domain
+  do j=1,ny
+     do i=1,nx
+        ! If wall cell, change Laplacian to identity
+        if (mask(i,j).eq.1) then
+           plap(i,j,:,:)=0.0_WP
+           plap(i,j,1,0)=1.0_WP
+        else
+           ! If neighbor to wall cell, use Neumann
+           if (mask(i+1,j).eq.1) then
+              plap(i,j,1, 0)=plap(i,j,1,0)+plap(i,j,1,+1)
+              plap(i,j,1,+1)=0.0_WP
+           end if
+           if (mask(i-1,j).eq.1) then
+              plap(i,j,1, 0)=plap(i,j,1,0)+plap(i,j,1,-1)
+              plap(i,j,1,-1)=0.0_WP
+           end if
+           if (mask(i,j+1).eq.1) then
+              plap(i,j,2, 0)=plap(i,j,2,0)+plap(i,j,2,+1)
+              plap(i,j,2,+1)=0.0_WP
+           end if
+           if (mask(i,j-1).eq.1) then
+              plap(i,j,2, 0)=plap(i,j,2,0)+plap(i,j,2,-1)
+              plap(i,j,2,-1)=0.0_WP
+           end if
+        end if
+     end do
+  end do
 
   ! Solve the pressure Poisson equation
   call pressure_solve
-  open (unit = 7, file = "jcx.txt")
- write (7,*)  P
- close(7)
+  
  !call sleep(1)
   
   ! Correct U velocity

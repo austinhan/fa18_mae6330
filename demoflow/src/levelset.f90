@@ -29,6 +29,10 @@ subroutine levelset_init
   use levelset
   implicit none
   integer :: i,j
+
+  ! define densities
+  rhog=0.1
+  rhol=1
   
   ! ==========================================
   ! ========= PARAMETERS TO MODIFY ===========
@@ -40,7 +44,7 @@ subroutine levelset_init
         !G(i,j)=-sqrt(xm(i)**2+ym(j)**2)+0.15
         !if ((xm(i)**2+ym(j)**2).lt.0.15) G(i,j)=-G(i,j)
         !G(i,j)=init_zalesak((/xm(i),ym(j),0.0_WP/),(/0.0_WP,0.25_WP,0.0_WP/),0.15_WP,0.05_WP,0.25_WP)
-        G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.25_WP,0.05_WP)
+        G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.15_WP,0.05_WP)
      end do
   end do
   
@@ -354,6 +358,7 @@ subroutine levelset_curvature
   return
 end subroutine levelset_curvature
 
+
 subroutine levelset_jump
    use levelset
 
@@ -362,45 +367,99 @@ subroutine levelset_jump
  
  do i=1,nx
     do j=1,ny
+
+      if ((mask(i+1,j  ).eq.1).or. &
+      &   (mask(i-1,j  ).eq.1).or. &
+      &   (mask(i  ,j-1).eq.1).or. &
+      &   (mask(i  ,j+1).eq.1)) cycle
+
+! Pressure Laplacian starts here -----------------
+   
+      if (G(i,j).gt.0) then
+         rhoij = rhol
+         nrhoij= rhog
+      else
+         rhoij = rhog
+         nrhoij= rhol
+      end if
+
+      ! Interface on right
+      if (G(i,j)*G(i+1,j).lt.0) then
+         thet=-G(i,j)/(G(i+1,j)-G(i,j))
+         rhori= rhoij*(1-thet)+(thet)*nrhoij
+      else
+         rhori=rhoij
+      end if
+
+      ! Interface on left
+      if (G(i,j)*G(i-1,j).lt.0) then
+         thet=-G(i,j)/(G(i-1,j)-G(i,j))
+         rhole= rhoij*(1-thet)+(thet)*nrhoij
+      else
+         rhole=rhoij
+      end if
+
+      ! Interface above
+      if (G(i,j)*G(i,j+1).lt.0) then
+         thet=-G(i,j)/(G(i,j+1)-G(i,j))
+         rhoab= rhoij*(1-thet)+(thet)*nrhoij
+      else
+         rhoab=rhoij
+      end if
+
+      ! Interface below
+      if (G(i,j)*G(i,j-1).lt.0) then
+         thet =-G(i,j)/(G(i,j-1)-G(i,j))
+         rhobe= rhoij*(1-thet)+(thet)*nrhoij
+      else
+         rhobe=rhoij
+      end if
+      
+  plap(i,j,1,-1)=+1.0_WP/(rhole*d**2)
+  plap(i,j,1, 0)=-1.0_WP/(rhole*d**2)-1.0_WP/(rhori*d**2)
+  plap(i,j,1,+1)=+1.0_WP/(rhori*d**2)
+
+  plap(i,j,2,-1)=+1.0_WP/(rhobe*d**2)
+  plap(i,j,2, 0)=-1.0_WP/(rhobe*d**2)-1.0_WP/(rhoab*d**2)
+  plap(i,j,2,+1)=+1.0_WP/(rhoab*d**2)
+
+! Pressure Laplacian ends here -----------------
        jcx(i,j)=0.0_WP
        jcy(i,j)=0.0_WP
  
-       if ((mask(i+1,j  ).eq.1).or. &
-       &   (mask(i-1,j  ).eq.1).or. &
-       &   (mask(i  ,j-1).eq.1).or. &
-       &   (mask(i  ,j+1).eq.1)) cycle
- 
        if (G(i+1,j  )*G(i,j).lt.0) then 
           icurv=curv(i,j)*(1+G(i,j)/(G(i+1,j)-G(i,j)))+curv(i+1,j)*(-G(i,j)/(G(i+1,j)-G(i,j)))
-          !icurv=1.0_WP/.15_WP
-          jcx(i,j)=sigma*icurv
+          jcx(i,j)=sigma*icurv/rhori
           if (G(i+1,j).lt.G(i,j)) jcx(i,j)=-jcx(i,j)
        end if
  
        if (G(i-1,j  )*G(i,j).lt.0) then 
          icurv=curv(i-1,j)*(1+G(i-1,j)/(G(i,j)-G(i-1,j)))+curv(i,j)*(-G(i-1,j)/(G(i,j)-G(i-1,j)))
-
-          !icurv=1.0_WP/.15_WP
-          jcx(i,j)=sigma*icurv
+          jcx(i,j)=sigma*icurv/rhole
           if (G(i-1,j).lt.G(i,j)) jcx(i,j)=-jcx(i,j)
        end if
  
        if (G(i  ,j+1)*G(i,j).lt.0) then 
          icurv=curv(i,j)*(1+G(i,j)/(G(i,j+1)-G(i,j)))+curv(i,j+1)*(-G(i,j)/(G(i,j+1)-G(i,j)))
-          !icurv=1.0_WP/.15_WP
-          jcy(i,j)=sigma*icurv
+          jcy(i,j)=sigma*icurv/rhoab
           if (G(i,j+1).lt.G(i,j)) jcy(i,j)=-jcy(i,j)
        end if
  
        if (G(i  ,j-1)*G(i,j).lt.0) then 
          icurv=curv(i,j-1)*(1+G(i,j-1)/(G(i,j)-G(i,j-1)))+curv(i,j)*(-G(i,j-1)/(G(i,j)-G(i,j-1)))
-          !icurv=1.0_WP/.15_WP
-          jcy(i,j)=sigma*icurv
+          jcy(i,j)=sigma*icurv/rhobe
           if (G(i,j-1).lt.G(i,j)) jcy(i,j)=-jcy(i,j)
        end if
  
        div(i,j) = div(i,j)+(jcx(i,j)+jcy(i,j))*dt/d**2
+
+       if ((G(i,j).lt.0).and.(G(i+1,j)*G(i,j).lt.0).and.(j.eq.50))then
+       end if
+
+
     end do
  end do
+
+
 
 end subroutine levelset_jump
