@@ -31,8 +31,8 @@ subroutine levelset_init
   integer :: i,j
 
   ! define densities
-  rhog=0.1
-  rhol=1
+  rhog= 1_WP
+  rhol= 1_WP
   
   ! ==========================================
   ! ========= PARAMETERS TO MODIFY ===========
@@ -44,7 +44,7 @@ subroutine levelset_init
         !G(i,j)=-sqrt(xm(i)**2+ym(j)**2)+0.15
         !if ((xm(i)**2+ym(j)**2).lt.0.15) G(i,j)=-G(i,j)
         !G(i,j)=init_zalesak((/xm(i),ym(j),0.0_WP/),(/0.0_WP,0.25_WP,0.0_WP/),0.15_WP,0.05_WP,0.25_WP)
-        G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.15_WP,0.05_WP)
+        G(i,j)=init_deformed((/xm(i),ym(j),0.0_WP/),0.1_WP,0.05_WP)
      end do
   end do
   
@@ -383,6 +383,10 @@ subroutine levelset_jump
          nrhoij= rhol
       end if
 
+      rhomat(i,j)=rhoij
+      rhomathal(i,j)=rhoij
+      rhomathab(i,j)=rhoij
+
       ! Interface on right
       if (G(i,j)*G(i+1,j).lt.0) then
          thet=-G(i,j)/(G(i+1,j)-G(i,j))
@@ -391,13 +395,18 @@ subroutine levelset_jump
          rhori=rhoij
       end if
 
+      rhomatr(i,j)=rhori
+
       ! Interface on left
       if (G(i,j)*G(i-1,j).lt.0) then
          thet=-G(i,j)/(G(i-1,j)-G(i,j))
          rhole= rhoij*(1-thet)+(thet)*nrhoij
+         if (abs(G(i,j)).lt.abs(G(i-1,j))) rhomathal(i,j)=nrhoij 
       else
          rhole=rhoij
       end if
+
+      rhomatl(i,j)=rhole
 
       ! Interface above
       if (G(i,j)*G(i,j+1).lt.0) then
@@ -407,13 +416,18 @@ subroutine levelset_jump
          rhoab=rhoij
       end if
 
+      rhomata(i,j)=rhoab
+
       ! Interface below
       if (G(i,j)*G(i,j-1).lt.0) then
          thet =-G(i,j)/(G(i,j-1)-G(i,j))
          rhobe= rhoij*(1-thet)+(thet)*nrhoij
+         if (abs(G(i,j)).lt.abs(G(i,j-1))) rhomathab(i,j)=nrhoij 
       else
          rhobe=rhoij
       end if
+
+      rhomatb(i,j)=rhobe
       
   plap(i,j,1,-1)=+1.0_WP/(rhole*d**2)
   plap(i,j,1, 0)=-1.0_WP/(rhole*d**2)-1.0_WP/(rhori*d**2)
@@ -452,10 +466,6 @@ subroutine levelset_jump
        end if
  
        div(i,j) = div(i,j)+(jcx(i,j)+jcy(i,j))*dt/d**2
-
-       if ((G(i,j).lt.0).and.(G(i+1,j)*G(i,j).lt.0).and.(j.eq.50))then
-       end if
-
 
     end do
  end do
