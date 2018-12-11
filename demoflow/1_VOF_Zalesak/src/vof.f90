@@ -3,8 +3,7 @@ module vofmod
   use vof_lookup
   implicit none
   
-  ! VOF field
-  real(WP), dimension(0:nx+1,0:ny+1) :: VOF
+
   
   ! Normal vector
   real(WP), dimension(0:nx+1,0:ny+1) :: normx

@@ -65,6 +65,13 @@ module demoflow
   
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
+
+    ! VOF field
+  real(WP), dimension(0:nx+1,0:ny+1) :: VOF
+  real(WP), dimension(1:nx,1:ny) :: Are
+  integer :: ij,ji
+  real(WP) :: epsil
+
   
 end module demoflow
 
@@ -98,6 +105,8 @@ program main
   call visualize_init
   
   ! Main time loop
+  open(UNIT=88,FILE='MASS.TXT')
+  epsil = d/2
   timeloop: do while (time.lt.maxtime .and. ntime.lt.maxstep)
      
      ! Adjust timestep size
@@ -116,6 +125,22 @@ program main
      ! VOF
      if (use_vof) call vof_step
      
+
+     do ij=1,nx
+      do ji=1,ny
+         if ((VOF(IJ,JI)-0.5_WP).LT.-epsil) then
+            Are(ij,ji) = 0.0_WP
+         else if ((VOF(IJ,JI)-0.5_WP).gT.epsil) then
+            Are(ij,ji) = 1.0_WP
+         else
+            Are(ij,ji) = 0.5_WP*(1+sin((vof(ij,ji)-0.5_WP)*pi/(epsil*2)))
+         end if
+      end do
+   end do
+
+    write(88,*) sum(Are)/nx/ny
+  
+     
      ! Velocity step
      call velocity_step
      
@@ -126,6 +151,7 @@ program main
      call visualize_dump
      
   end do timeloop
+  CLOSE(88)
   
   ! Get final time
   call cpu_time(walltime)
