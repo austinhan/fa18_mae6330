@@ -33,7 +33,7 @@ module demoflow
   real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,-1.0_WP/)
   ! Do we use VOF
   logical , parameter :: use_vof=.true.
-    ! Do we use levelset
+  ! Do we use levelset
   logical , parameter :: use_levelset=.true.
   ! ==========================================
   
@@ -138,7 +138,7 @@ program main
       end do
    end do
 
-    write(88,*) sum(Are)/nx/ny
+    write(88,*) sum(Are)/nx/ny, time
   
      
      ! Velocity step
