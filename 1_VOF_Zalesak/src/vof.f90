@@ -17,10 +17,10 @@ module vofmod
   ! ==========================================
   
   ! Surface tension coefficient
-  real(WP), parameter :: sigma=0.0_WP!1.0e-2_WP
+  real(WP), parameter :: sigma=1.0e-2_WP
   
   ! Phase densities
-  real(WP), parameter :: rho_l=50.0_WP
+  real(WP), parameter :: rho_l=10.0_WP
   real(WP), parameter :: rho_g=1.0_WP
 
   ! Limits to VOF values
@@ -297,12 +297,11 @@ subroutine vof_init
   do j=1,ny
      do i=1,nx
         ! Get Zalesak distance on submesh
-         ! Initial zalesak center, radius, width, height: (/0.0_WP,0.25_WP,0.0_WP/),0.15_WP,0.05_WP,0.25_WP
         do jj=1,nfine
            do ii=1,nfine
-              if (init_drop((/x(i)+(real(ii-1,WP)+0.5_WP)*d/real(nfine,WP),&
+              if (init_zalesak((/x(i)+(real(ii-1,WP)+0.5_WP)*d/real(nfine,WP),&
                    &             y(j)+(real(jj-1,WP)+0.5_WP)*d/real(nfine,WP),0.0_WP/),&
-                   &           (/0.0_WP,0.25_WP,0.0_WP/),0.1_WP,-0.25_WP).gt.0.0_WP) then
+                   &           (/0.0_WP,0.25_WP,0.0_WP/),0.15_WP,0.05_WP,0.25_WP).gt.0.0_WP) then
                  VOF(i,j)=VOF(i,j)+1.0_WP/(nfine**2)
               end if
            end do
@@ -353,23 +352,7 @@ contains
        init_zalesak = c  
     endif
   end function init_zalesak
-
-  function init_drop(xyz,center,radius,height)
-   real(WP) :: init_drop
-   real(WP), dimension(3), intent(in) :: xyz,center
-   real(WP), intent(in) :: radius,height
-   real(WP) :: c,b
-   c = radius-sqrt(sum((xyz-center)**2))
-   b = height-xyz(2)
-   if (c.gt.0.0_WP) then
-      init_drop = c
-   elseif (b.gt.0.0_WP) then
-      init_drop = b
-   else
-      init_drop = min(c,b)
-   end if
-  end function init_drop
-
+  
 end subroutine vof_init
 
 

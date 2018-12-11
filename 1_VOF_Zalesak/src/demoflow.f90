@@ -15,26 +15,24 @@ module demoflow
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.1_WP
   ! End of time integration
-  real(WP), parameter :: maxtime=100.0_WP
-  integer , parameter :: maxstep=1000000
+  real(WP), parameter :: maxtime=1.0_WP
+  integer , parameter :: maxstep=10000
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
   real(WP), parameter :: abscvg=1.0e-4_WP
   integer , parameter :: maxpit=100
   ! Mesh size
-  integer,  parameter :: nx=150
-  integer,  parameter :: ny=150
+  integer,  parameter :: nx=50
+  integer,  parameter :: ny=50 
   ! Domain size
   real(WP), parameter :: Lx=1.0_WP
   real(WP), parameter :: Ly=1.0_WP
   ! Kinematic viscosity
   real(WP), parameter :: knu=0.001_WP
   ! Gravity
-  real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,-1.0_WP/)
+  real(WP), parameter, dimension(2) :: gravity=(/0.0_WP,0.0_WP/)
   ! Do we use VOF
   logical , parameter :: use_vof=.true.
-    ! Do we use levelset
-  logical , parameter :: use_levelset=.true.
   ! ==========================================
   
   ! Mesh
@@ -68,10 +66,8 @@ module demoflow
 
     ! VOF field
   real(WP), dimension(0:nx+1,0:ny+1) :: VOF
-  real(WP), dimension(1:nx,1:ny) :: Are
-  integer :: ij,ji
-  real(WP) :: epsil
-
+  ! Original VOF area
+  real(WP) :: area0
   
 end module demoflow
 
@@ -94,7 +90,10 @@ program main
   call demoflow_init
 
   ! Initialize VOF method
-  if (use_vof) call vof_init
+  if (use_vof) then 
+   call vof_init
+   area0=sum(VOF)/nx/ny
+  end if 
   
   ! Initialize time
   time=0.0_WP
@@ -105,8 +104,6 @@ program main
   call visualize_init
   
   ! Main time loop
-  open(UNIT=88,FILE='MASS.TXT')
-  epsil = d/2
   timeloop: do while (time.lt.maxtime .and. ntime.lt.maxstep)
      
      ! Adjust timestep size
@@ -119,43 +116,25 @@ program main
      if (ntime.eq.1) write(*,'(a12,a2,6a12)') 'Step','  ','Time  ','CFLmax','Umax  ','Vmax  ','Divergence','Piterations'
      write(*,'(i12,a2,1ES12.5,1F12.4,3ES12.3,i12)') ntime,'  ',time,CFL,maxval(abs(U)),maxval(abs(V)),maxval(abs(div)),pit
      
-     ! Levelset
-     if (use_levelset) call levelset_step
-
      ! VOF
      if (use_vof) call vof_step
      
-
-     do ij=1,nx
-      do ji=1,ny
-         if ((VOF(IJ,JI)-0.5_WP).LT.-epsil) then
-            Are(ij,ji) = 0.0_WP
-         else if ((VOF(IJ,JI)-0.5_WP).gT.epsil) then
-            Are(ij,ji) = 1.0_WP
-         else
-            Are(ij,ji) = 0.5_WP*(1+sin((vof(ij,ji)-0.5_WP)*pi/(epsil*2)))
-         end if
-      end do
-   end do
-
-    write(88,*) sum(Are)/nx/ny
-  
-     
      ! Velocity step
-     call velocity_step
+     !call velocity_step
      
      ! Pressure step
-     call pressure_step
+     !call pressure_step
      
      ! Dump data for visualization
      call visualize_dump
      
   end do timeloop
-  CLOSE(88)
   
   ! Get final time
   call cpu_time(walltime)
   print*,'Time taken: ',walltime-walltime_ref
+  print*,'Original disk area: ',area0
+  print*,'New disk area: ',sum(VOF)/nx/ny
   
 end program main
 
@@ -186,16 +165,12 @@ subroutine demoflow_setup
   
   ! Mask out walls
   mask=0
-  mask(:,0)=1
-  mask(:,ny+1)=1
-  mask(0,:)=1
-  mask(nx+1,:)=1
   
   ! Initial conditions - solid body rotation
   do j=0,ny+1
      do i=0,nx+1
-        U(i,j)=0.0_WP!-2.0_WP*Pi*ym(j)
-        V(i,j)=0.0_WP!+2.0_WP*Pi*xm(i)
+        U(i,j)=-2.0_WP*Pi*ym(j)
+        V(i,j)=+2.0_WP*Pi*xm(i)
      end do
   end do
   P=0.0_WP
@@ -390,7 +365,7 @@ subroutine velocity_step
         if (maxval(mask(i-1:i,j)).eq.0) then
            HU1(i,j)=-conv*((U(i,j  )+U(i+1,j))*(U(i,j  )+U(i+1,j  ))-(U(i-1,j)+U(i,j  ))*(U(i-1,j)+U(i  ,j))) &
                 &   -conv*((U(i,j+1)+U(i  ,j))*(V(i,j+1)+V(i-1,j+1))-(U(i  ,j)+U(i,j-1))*(V(i  ,j)+V(i-1,j))) &
-                &   +visc*(sum(ulap(i,j,1,-1:+1)*U(i-1:i+1,j))+sum(ulap(i,j,2,-1:+1)*U(i,j-1:j+1)))+gravity(1)*dt
+                &   +visc*(sum(ulap(i,j,1,-1:+1)*U(i-1:i+1,j))+sum(ulap(i,j,2,-1:+1)*U(i,j-1:j+1)))
         end if
      end do
   end do
@@ -400,7 +375,7 @@ subroutine velocity_step
         if (maxval(mask(i,j-1:j)).eq.0) then
            HV1(i,j)=-conv*((V(i+1,j)+V(i,j  ))*(U(i+1,j)+U(i+1,j-1))-(V(i,j  )+V(i-1,j))*(U(i,j  )+U(i,j-1))) &
                 &   -conv*((V(i  ,j)+V(i,j+1))*(V(i  ,j)+V(i  ,j+1))-(V(i,j-1)+V(i  ,j))*(V(i,j-1)+V(i,j  ))) &
-                &   +visc*(sum(vlap(i,j,1,-1:+1)*V(i-1:i+1,j))+sum(vlap(i,j,2,-1:+1)*V(i,j-1:j+1)))+gravity(2)*dt
+                &   +visc*(sum(vlap(i,j,1,-1:+1)*V(i-1:i+1,j))+sum(vlap(i,j,2,-1:+1)*V(i,j-1:j+1)))
         end if
      end do
   end do
@@ -500,12 +475,6 @@ subroutine pressure_step
      end do
   end do
   
-    ! GFM treatment of discontinuous pressure equation
-  if (use_levelset) then
-   call levelset_gfm_pressure
-   return
-end if
-
   ! Solve the pressure Poisson equation
   call pressure_solve
   
