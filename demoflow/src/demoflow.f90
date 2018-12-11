@@ -11,19 +11,19 @@ module demoflow
   ! ========= PARAMETERS TO MODIFY ===========
   ! ==========================================
   ! Time integration
-  real(WP), parameter :: maxdt=1e-4_WP
+  real(WP), parameter :: maxdt=1e-3_WP
   real(WP), parameter :: maxCFL=0.5_WP
   real(WP), parameter :: viztime=0.125_WP
   ! End of time integration
-  real(WP), parameter :: maxtime=30.0_WP
+  real(WP), parameter :: maxtime=1.0_WP !30.0_WP
   integer , parameter :: maxstep=10001
   ! Pressure convergence criterion
   real(WP), parameter :: relcvg=1.0e-4_WP
   real(WP), parameter :: abscvg=1.0e-4_WP
   integer , parameter :: maxpit=100
   ! Mesh size
-  integer,  parameter :: nx=100
-  integer,  parameter :: ny=100
+  integer,  parameter :: nx=50
+  integer,  parameter :: ny=50
   ! Domain size
   real(WP), parameter :: Lx=1_WP
   real(WP), parameter :: Ly=1_WP
@@ -77,6 +77,12 @@ module demoflow
   integer :: reinitcount
   real(WP), dimension(0:nx+1,0:ny+1) :: phi=0
 
+  ! Calculating area
+  real(WP) :: darea0, darea
+  real(WP), dimension(1:nx,1:ny) :: Are
+  integer :: ij,ji
+  real(WP) :: epsil
+
   ! Named constant
   real(WP), parameter :: Pi=3.141592653589793_WP     ! Pi
   
@@ -116,6 +122,24 @@ program main
   if (lvltrack.eq.1) then
     call levelsetinit
   end if
+
+  ! Get initial disk area
+  epsil = d/2
+  do ij=1,nx
+   do ji=1,ny
+      if (phi(ij,ji).LT.-epsil) then
+         Are(ij,ji) = 0.0_WP
+      else if (phi(ij,ji).gT.epsil) then
+         Are(ij,ji) = 1.0_WP
+      else
+         Are(ij,ji) = 0.5_WP*(1+sin(phi(ij,ji)*pi/(epsil*2)))
+      end if
+   end do
+end do
+
+darea0=sum(Are)/nx/ny/Lx/Ly
+
+
 
   ! Initialize visualization
   call visualize_init
@@ -160,9 +184,27 @@ program main
 
   if (lpttrack.eq.1) close(88)
 
+  ! Get disk area
+  do ij=1,nx
+   do ji=1,ny
+      if (phi(ij,ji).LT.-epsil) then
+         Are(ij,ji) = 0.0_WP
+      else if (phi(ij,ji).gT.epsil) then
+         Are(ij,ji) = 1.0_WP
+      else
+         Are(ij,ji) = 0.5_WP*(1+sin(phi(ij,ji)*pi/(epsil*2)))
+      end if
+   end do
+end do
+
+darea=sum(Are)/nx/ny/Lx/Ly
+
+
   ! Get final time
   call cpu_time(walltime)
   print*,'Time taken: ',walltime-walltime_ref
+  print*,'Original disk area: ',darea0
+  print*,'New disk area: ',darea
   
   ! Output velocity profile
   write(60,*) y(2),0.0_WP
